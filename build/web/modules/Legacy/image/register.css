@@ -1,0 +1,45 @@
+/* CSS Document */
+div {
+}
+.reg_input {
+	width:200px;
+}
+.reg_label {
+	float:right;
+	font-weight:bold;
+	padding-right:20px;
+	line-height:28px;
+	vertical-align:middle;	
+}
+.reg_div {
+}
+.reg_frame {
+	border:1px silver solid;
+	padding-top:0px;
+	padding-bottom:50px;
+	margin:auto;
+	width:950px;
+	display:block;
+	position:relative;
+}
+
+.reg_ltd {
+}
+.reg_rtd {
+	text-align:left;
+}
+
+.reg_tips {
+	float:left;
+}
+
+.reg_table {
+	white-space:nowrap;
+	margin:auto;
+	border:0;
+}
+
+.text_tip_grid {
+  text-align:left;
+}
+

@@ -1,0 +1,223 @@
+* {
+	margin:0;
+	font-size: 11px;
+	color: #F0F0F0;
+}
+a{
+	color: #FFFFFF;
+	text-decoration: none;
+	
+}
+
+
+ul,li{
+	list-style-image:none;
+	list-style-type:none;
+	text-decoration: none;
+}
+
+body{
+	text-align:center;
+	background-image: url(images2/pageBG.jpg);
+	background-repeat: repeat;
+	width: 100%;
+	height: 771px;
+}
+.h_space{
+	background-image: url(images2/space.jpg);
+	background-repeat: repeat-x;
+	height: 2px;
+	width: 189px;
+}	
+
+img{
+border:none;
+}
+#page_warp{
+	background-image: url(images2/pageBG.jpg);
+	background-repeat: repeat-x;
+	height: 773px;
+	
+}
+.basepage{
+	width: 1000px;
+	text-align: center;
+	height: 773px;
+	margin-top: 0;
+	margin-right: auto;
+	margin-bottom: 0;
+	margin-left: auto;
+	background-image: url(images2/pageBG.jpg);
+	background-repeat: repeat-x;
+}
+#header{
+	height: 84px;
+	width: 1009px;
+	clear: none;
+	text-align: center;
+	margin: 0px;
+	background: #ffffff;
+	/*background-image: url(images2/headerBG.jpg);
+	background-repeat: repeat-x;*/
+}
+.logo{
+	float: left;
+}
+.head_service{
+	width:420px;
+	float: left;
+	height: 40px;
+	margin-top: 30px;
+	padding-left: 40px;
+	background-image: url(images2/head_tel.jpg);
+	background-repeat: no-repeat;
+	margin-left: 370px;
+	text-align: left;
+	color: #FFFFFF;
+}
+#main{
+	border-top-color: #000000;
+	border-bottom-color: #000000;
+	border-left-color: #000000;
+	background: url('../images/images/menubg.gif');
+	background-repeat:repeat-y;
+	clear: left;
+	float: left;
+	height: auto;
+
+}
+#basic-accordian{
+	width:194px !important;;
+	float: left !important;;
+	text-align: left;
+}
+.accordion_headings{
+	background:#D1D2CC !important;;
+	cursor:pointer !important;;
+	font-weight:normal !important;;
+	width: 189px !important;;
+	text-align: left !important;;
+	margin-bottom: 13px !important;;
+	margin-top: 10px !important;;
+}
+
+.accordion_headings:hover{
+	background:#D1D2CC;
+}
+
+.accordion_child{
+	width: 189px;
+	background-color: #D1D2CC;
+}
+.accordion_child li{
+	font-family: "微软雅黑";
+	height: 24px;
+	text-indent: 37px;
+}
+.accordion_child li a{
+	font-size: 13px;
+	color: #5b5b5b;
+	font-weight: bold;
+	font-family: "微软雅黑";
+}
+.accordion_child li a:hover{
+	font-size: 13px;
+	color: #000000;
+	font-weight: bold;
+	font-family: "微软雅黑";
+}
+.header_highlight{
+}
+
+#nav_left{
+	float: left;
+	/*height: 617px;*/
+	width: 189px;
+	border-right-width: 4px;
+	border-right-style: solid;
+	border-right-color: #333333;
+	background-color: #D1D2CC;
+	text-align: left;
+	clear: left;
+}
+.nav_title{
+	font-family: "方正粗圆简体";
+	font-size: 18px;
+	font-weight: bold;
+	color: #393939;
+	text-decoration: none;
+	text-align: left;
+	display: inline;
+	width: 180px;
+	padding-left: 40px;
+	}
+.nav_title ul{
+	text-align: left;
+	display: inline;
+}
+.nav_title ul li{
+	font-family: "方正粗圆简体";
+	font-size: 14px;
+	font-weight: bold;
+	color: #5b5b5b;
+	height: 21px;
+	text-align: left;
+	text-indent: 40px;
+}
+.main_right{
+	border-left-color:#CCC;
+	border-left-width:1px;
+	border-left-style:solid;
+	width: 809px;
+	float: left;
+}
+.main_user{
+	background-color: #FFFFFF;
+	background-image: url(images2/main_userBG.jpg);
+	background-repeat: repeat-x;
+	float: left;
+	height: 30px;
+	width: 1009px/*809px*/;
+}
+.main_title{
+	background-color: #FFFFFF;
+	background-repeat: repeat-x;
+	height: 32px; /*51*/
+	width: 810px;
+	float: left;
+}
+.main_content{
+	background-color: #FFFFFF;
+	float: left;
+	/*height: 563px;*/
+	width: 810px;
+}
+.main_page{
+	width: 1009px; background-image:url(../images/images/mainbg.gif); background-repeat:repeat-y;
+}
+#footer{
+	font-size: 12px;
+	color: #FFFFFF;
+	text-align: left;
+	background-image: url(images2/foot.gif);
+	background-repeat: repeat-x;
+	height: 84px;
+	width: 1009px;
+	float: left;
+	clear: left;
+	padding-top: 20px;
+	overflow: hidden;
+	
+}
+.copyright_left{
+	padding-left: 30px;
+	width:300px;
+	float: left;
+}
+.copyright_right{
+	width:480px;
+	float: right;
+	background-image: url(images2/head_tel.gif);
+	background-repeat: no-repeat;
+	padding-left: 40px;
+}

@@ -1,0 +1,1011 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html dir="ltr" xml:lang="en-gb" xmlns="http://www.w3.org/1999/xhtml" lang="en-gb">
+<head>
+
+
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>注册</title>
+
+<link type="text/css" href="css/smoothness/jquery-ui-1.8.8.custom.css" rel="stylesheet" />
+
+
+<link rel="stylesheet" href="image/template.css" type="text/css">
+<link rel="stylesheet" href="image/constant.css" type="text/css">
+<link rel="stylesheet" href="image/custom.css" type="text/css">
+<link rel="stylesheet" href="image/imagegallery.css" type="text/css">
+<link rel="stylesheet" href="image/register.css" type="text/css">
+<link rel="stylesheet" href="image/jquery.bt.css" type="text/css">
+<link rel="stylesheet" href="image/tip-yellowsimple/tip-yellowsimple.css" type="text/css" />
+
+<script type="text/javascript" src="js/jquery.js"></script>	
+<script type="text/javascript" src="js/jquery-ui-1.8.8.custom.min.js"></script>
+<script type="text/javascript" src="../../locale.jsp"></script>
+<script type="text/javascript" src="js/check.js"></script>
+<script type="text/javascript" src="../../js/base64.js"></script>
+<script type="text/javascript" src="../../js/server.js"></script>
+<script type="text/javascript" src="../../js/jquery.cookie.js"></script>
+<script type="text/javascript" src="../../js/account.js"></script>
+<script type="text/javascript" src="../../js/server.js"></script>
+<script type="text/javascript" src="js/xml.parser.js"></script>
+<script type="text/javascript" src="js/jquery.blockUI.js"></script>
+<script type="text/javascript" src="js/jquery.lightbox-0.5.pack.js"></script>
+<script type="text/javascript" src="js/util.js"></script>
+<script type="text/javascript" src="js/jquery.bt.min.js"></script>
+<script type="text/javascript" src="js/jquery.poshytip.js"></script>
+
+<!--<script type="text/javascript" src="image/jquery.jNice.js"></script>-->
+
+<!--<link href="image/base.css" rel="stylesheet" type="text/css" />-->
+<!--<link href="image/jNice.css" rel="stylesheet" type="text/css" />-->
+
+<script language="javascript">
+$(document).ajaxStop($.unblockUI);
+
+
+var g_username='';
+var g_email='';
+
+$(function(){
+	// 初始化各种component
+	// Button
+	//$("#subBtn").button();
+	//$("#radioset").buttonset();
+
+	if(jQuery.browser.msie && jQuery.browser.version.indexOf(6.)>-1) {
+		//alert('not supported');
+		$(document.body).html('<h3 style="margin:100px;">本系统目前支持的浏览器为IE 7+，Firefox，Chrome，Safari，Opera<br/>感谢您的支持</h3>');
+	}
+
+	// 注册验证码
+	$('#verifyimg').attr('src', Server+"/billingCN/VerificationServlet"+'?'+Math.random());
+	$('#verifyimg').click(function() {
+		$(this).attr('src', Server+"/billingCN/VerificationServlet"+'?'+Math.random());
+		return false;
+	});
+	
+	// 重发验证码
+	$('#resendimg').click(function(){
+		$(this).attr('src', Server+"/billingCN/VerificationServlet"+'?'+Math.random());
+		return false;
+	});
+	
+
+	// Dialog
+	$('#checkDialog').dialog({
+		autoOpen: false,
+		width: 680,
+		//position: ['center',200],
+		dragable: false,
+		resizable: false,
+		modal: true,
+		buttons: {
+			"返回继续填写": function() { 
+				$(this).dialog("close"); 
+			}
+		}
+	});
+	
+	$('#okDialog').dialog({
+		autoOpen: false,
+		width: 680,
+		modal: true,
+		draggable: false,
+		//position: ['center',200],
+		resizable: false,
+		buttons: {
+			"关闭": function() { 
+				$(this).dialog("close"); 
+			}
+		}
+	});
+	
+	
+	
+	// Success Dialog
+	$('#successDialog').dialog({
+		autoOpen: false,
+		width: 600,
+		resizable: false,
+		buttons: {
+			"确认": function() { 
+				location.href='../../index.html';
+			}
+		}
+	});
+	
+	// 协议窗口
+    $('#protocol').click(function() { 
+		
+        $.blockUI({
+			message: $('#protocolContent'), 
+			css: {
+				cursor: 'default',
+				margin: 'auto',
+				top: '100px',
+				width: '500px',
+				height: '400px'
+			}
+		});
+		
+        $('.blockOverlay').click($.unblockUI); 
+		return false;
+    }); 
+	
+	var tips="";
+	// Dialog Link
+	// 正确性检测, 并dialog提示
+	$('#regBtn').click(function(){
+		//gotoPage('#main_content_1', '#main_content_2');
+		//return false;
+		
+		//alert($('#question_ex').val());
+		//return false;
+		
+		var isok=true;
+		
+		if(jQuery.trim($('#username').val())=="") { 
+			isok=false;
+			tips='登录用户名不能为空。';
+		}else if(jQuery.checkstr($('#username').val(), 'username')==false 
+				|| $('#username').val().length>45
+				|| $('#username').val().length<6) {
+			isok=false;
+			tips='登录用户名只能使用字母，数字或者下划线，并且至少6个字符，最多45个字符。';
+		}else if($('#firstname').val()=='') {
+			isok=false;
+			tips='姓不能为空。';
+		}else if($('#lastname').val()=='') {
+			isok=false;
+			tips='名不能为空。';
+		}else if($('#email').val()=='') {
+			isok=false;
+			tips='邮箱地址不能为空。';
+		}else if(jQuery.checkstr($('#email').val(), 'email')==false 
+				|| $('#email').val() != $('#email_2').val()){
+			isok=false;
+			tips='请确认邮箱地址。';
+		}else if($('#password').val().length<6 || $('#password').val().length>45) {
+			isok=false;
+			tips='密码最少为6位, 最多为45位。';
+		}else if($('#password').val() != $('#password_2').val()) {
+			isok=false;
+			tips='请确认密码。';						
+		}else if($('#question_ex').val().length<6) {
+			isok=false;
+			tips='密码找回提示问题最少为6位。';
+		}else if($('#answer').val().length<4) {
+			isok=false;
+			tips='问题答案最少为4位。';				
+		}/*else if(jQuery.trim($('#etc_1').val()) == '') {
+			isok=false;
+			tips='地址不能为空';						
+		}else if(jQuery.trim($('#etc_2').val()) == '') {
+			isok=false;
+			tips='城市不能为空';						
+		}else if(jQuery.trim($('#etc_3').val()) == '') {
+			isok=false;
+			tips='省不能为空';						
+		}else if(jQuery.trim($('#etc_4').val()) == '') {
+			isok=false;
+			tips='国家不能为空';						
+		}else if(jQuery.trim($('#etc_5').val()) == '') {
+			isok=false;
+			tips='邮编不能为空';						
+		}*/else if(jQuery.checkstr($('#etc_5').val(), 'postcode')==false && jQuery.trim($('#etc_5').val()) != '') {
+			isok=false;
+			tips='邮编不正确。';
+		}/*else if(jQuery.trim($('#etc_6').val()) == '') {
+			isok=false;
+			tips='电话号码不能为空';						
+		}else if(jQuery.checkstr($('#etc_6').val(), 'tel')==false) {
+			isok=false;
+			tips='电话号码不正确';	
+		}*/else if(jQuery.trim($('#etc_7').val()) == '') {
+			isok=false;
+			tips='手机号码不能为空。';
+		}else if(jQuery.checkstr($('#etc_7').val(), 'mobile')==false) {
+			isok=false;
+			tips='手机号码不正确。';
+		}else if(jQuery.trim($('#etc_8').val()) != '' 
+				&& jQuery.checkstr($('#etc_8').val(), 'qq')==false) {
+			isok=false;
+			tips='QQ号码只能为数字。';
+		}else if(jQuery.trim($('#etc_9').val()) != '' 
+				&& jQuery.checkstr($('#etc_9').val(), 'email')==false) {
+			isok=false;
+			tips='MSN不正确。';
+		}else if(jQuery.trim($('#verifycode').val())==''){
+			isok=false;
+			tips='请填写验证码。';
+		}else if($('#etc_10').attr('checked')==false){
+			isok=false;
+			tips='请阅读并接受有关条款。';
+		}
+	
+		if(!isok) {
+			$('#tips').html(tips);
+			$('#checkDialog').dialog('open');
+		}else {
+			
+			$('#c_username').html($('#username').val());
+			$('#c_firstname').html($('#firstname').val());
+			$('#c_lastname').html($('#lastname').val());
+			$('#c_email').html($('#email').val());
+			$('#c_etc_1').html($('#etc_1').val());
+			$('#c_etc_5').html($('#etc_5').val());
+			$('#c_question').html($('#question_ex').val());
+			$('#c_answer').html($('#answer').val());
+			$('#c_etc_2').html($('#etc_2').val());
+			$('#c_etc_3').html($('#etc_3').val());
+			
+			$('#c_etc_8').html($('#etc_8').val());
+			$('#c_etc_9').html($('#etc_9').val());
+			$('#c_mobile').html($('#etc_7').val());
+			
+			gotoPage('#main_content_1', '#main_content_2');
+			//register_submit();
+		}
+		
+		return false;
+	});
+	$('#retBtn').click(function() {
+		$('#verifyimg').click();
+		gotoPage('#main_content_2', '#main_content_1');
+		return false;
+	});
+	$('#subBtn').click(function() {
+		register_submit();
+		return false;
+	});
+
+	// Datepicker
+	$('#datepicker').datepicker({
+		inline: true
+	});
+	
+	// Slider
+	$('#slider').slider({
+		range: true,
+		values: [17, 67]
+	});	
+	
+	
+});
+
+// 提交注册
+function register_submit() {
+	//gotoPage('#main_content_2', '#main_content_3');
+	//return false;
+	
+	g_username=$('#username').val();
+	g_email=$('#email').val();
+	
+	$.blockUI();
+	//alert(jQuery.trim($('#verifycode').val()));
+	$.post(
+		Server+"/billingCN/UserControl",
+		{
+			RequestType: 'Register',
+			LoginUsername: $('#username').val(),
+			Password: $('#password').val(),
+			Firstname: $('#firstname').val(),
+			Lastname: $('#lastname').val(),
+			Email: $('#email').val(),
+			Address: $('#etc_1').val(),
+			Postcode: $('#etc_5').val(),
+			SecurityQuestion: $('#question_ex').val(),
+			SecurityAnswer: $('#answer').val(),
+			City: $('#etc_2').val(),
+			Region: $('#etc_3').val(),
+			Phone: '',//$('#etc_6').val()
+			QQ: $('#etc_8').val(),
+			MSN: $('#etc_9').val(),
+			MobileNo: $('#etc_7').val(),
+			code: jQuery.trim($('#verifycode').val())
+		},
+		function(data) {
+			var obj=$.createXml(data);
+			var result=$(obj).find('status').text().toLowerCase();
+			var info='';
+			
+			switch(result) {
+				case 'email exists':info='注册失败，Email已被注册。';break;
+				case 'user exists':info='注册失败，用户已存在。';break;
+				case 'bad_email_address':info='注册失败，邮箱地址错误。';break;
+				case 'fault':info='注册失败，发生错误。';break;
+				case 'valid':info='注册成功。';	break;
+				case 'wrong_code':info='验证码错误或已过期。';	break;
+				default:info='未定义的返回信息：'+result;
+			}
+			
+			if(result=='valid') {
+				$('#p3_username').html(g_username);
+				$('#p3_email').html(g_email);
+				$('#resendimg').attr('src', Server+"/billingCN/VerificationServlet"+'?'+Math.random());
+				gotoPage('#main_content_2', '#main_content_3');
+			}else{
+				$('#tips').html(info);
+				$('#checkDialog').dialog('open');
+			}
+		}
+	);
+};
+			
+$(document).ready(function(){
+	// 用户名存在性check
+	$('#username').blur(function() {
+		$.post(
+			Server+"/billingCN/UserControl",
+			{
+				RequestType: 'checkLogin',
+				LoginUsername: $('#username').val()
+			},
+			function(data) {
+				//alert(data);
+				var obj=$.createXml('<root>'+data+'</root>');
+				var result=$(obj).find('status').text();
+				if(result.toLowerCase()=='user_exists' 
+					|| jQuery.trim($('#username').val())==''
+					|| $('#username').val().length>45
+					|| $('#username').val().length<6
+					|| jQuery.checkstr($('#username').val(), 'username')==false) {					
+					$('#tips_username').html('<span class="ui-icon ui-icon-close"></span>');
+					$('#tips_username_2').html('用户名已存在或无效');
+					//$('#tips_username_2').bt('111111111111111');
+				}else if(result.toLowerCase()=='login_not_exist') {
+					$('#tips_username').html('<span class="ui-icon ui-icon-check"></span>');
+					$('#tips_username_2').html('');
+				}
+			}
+		);
+	});
+	
+	// 邮箱存在性check
+	$('#email').blur(function() {
+		$.post(
+			Server+"/billingCN/UserControl",
+			{
+				RequestType: 'checkEmail',
+				Email: $('#email').val()
+			},
+			function(data) {
+				var obj=$.createXml('<root>'+data+'</root>');
+				var result=$(obj).find('status').text();
+				if(result.toLowerCase()=='email_exists' 
+					|| jQuery.trim($('#email').val())==''
+					|| jQuery.checkstr($('#email').val(), 'email')==false) {
+					
+					$('#tips_email').html('<span class="ui-icon ui-icon-close"></span>');
+					$('#tips_email_t2').html('邮箱地址已存在或无效');
+				}else if(result.toLowerCase()=='email_not_exist') {
+					$('#tips_email').html('<span class="ui-icon ui-icon-check"></span>');
+					$('#tips_email_t2').html('');
+				}
+			}
+		);
+	});
+	
+	// 邮箱确认验证
+	$('#email_2').blur(function() {
+		if($('#email').val() != $('#email_2').val() || jQuery.trim($('#email_2').val())=='' ) {
+			$('#tips_email_2').html('<span class="ui-icon ui-icon-close"></span>');
+		}else {
+			$('#tips_email_2').html('<span class="ui-icon ui-icon-check"></span>');
+		}
+	});
+	
+	// 条款文本初始化
+	//$('#closeProtocol').button();
+	$.get('txt/agreement.txt', 
+		function(data) {
+			$('#agreeTxt').val(data);
+		}
+	);
+	/**
+	$('#closeProtocol').click(function() {
+		$.unblockUI();
+	});
+	*/
+	
+	$('input[type=text],input[type=password]').attr('style', '{border:1px solid silver;height:16px;}');
+	
+	//$('#main_content').append($('#main_content_1'));
+	
+});
+
+function gotoPage(from, to) {
+	if(to=='#main_content_1') {
+		//$('#main_frame').attr('style', '{height:1200px;}');//1200
+		window.scrollTo(0,480);
+	}else if(to=='#main_content_2') {
+		//$('#main_frame').attr('style', '{height:700px;}');//700
+		window.scrollTo(0,100);
+	}else if(to=='#main_content_3'){
+		//$('#main_frame').attr('style', '{height:80px;}');
+		window.scrollTo(0,0);
+	}
+			
+	$(from).hide('slide');
+	$(to).show('slide');
+	
+}
+
+
+(function( $ ) {
+	$.widget( "ui.combobox", {
+		_create: function() {
+			var self = this,
+				select = this.element.hide(),
+				selected = select.children( ":selected" ),
+				value = selected.val() ? selected.text() : "";
+			var input = this.input = $( "<input>" )
+				.insertAfter( select )
+				.attr('id', select.attr('id')+'_ex')
+				.css({width:'180px'})
+				.val( value )
+				.autocomplete({
+					delay: 0,
+					minLength: 0,
+					source: function( request, response ) {
+						var matcher = new RegExp( $.ui.autocomplete.escapeRegex(request.term), "i" );
+						response( select.children( "option" ).map(function() {
+							var text = $( this ).text();
+							if ( this.value && ( !request.term || matcher.test(text) ) )
+								return {
+									label: text.replace(
+										new RegExp(
+											"(?![^&;]+;)(?!<[^<>]*)(" +
+											$.ui.autocomplete.escapeRegex(request.term) +
+											")(?![^<>]*>)(?![^&;]+;)", "gi"
+										), "<strong>$1</strong>" ),
+									value: text,
+									option: this
+								};
+						}) );
+					},
+					select: function( event, ui ) {
+						ui.item.option.selected = true;
+						self._trigger( "selected", event, {
+							item: ui.item.option
+						});
+					},
+					change: function( event, ui ) {
+						if ( !ui.item ) {
+							var matcher = new RegExp( "^" + $.ui.autocomplete.escapeRegex( $(this).val() ) + "$", "i" ),
+								valid = false;
+							select.children( "option" ).each(function() {
+								if ( $( this ).text().match( matcher ) ) {
+									this.selected = valid = true;
+									return false;
+								}
+							});
+							/*
+							if ( !valid ) {
+								// remove invalid value, as it didn't match anything
+								$( this ).val( "" );
+								select.val( "" );
+								input.data( "autocomplete" ).term = "";
+								return false;
+							}
+							*/
+						}
+					}
+				})
+				.addClass( "ui-widget ui-widget-content ui-corner-left" );
+
+			input.data( "autocomplete" )._renderItem = function( ul, item ) {
+				return $( "<li></li>" )
+					.data( "item.autocomplete", item )
+					.append( "<a>" + item.label + "</a>" )
+					.appendTo( ul );
+			};
+
+			this.button = $( "<button type='button'>&nbsp;</button>" )
+				.attr( "tabIndex", -1 )
+				.attr( "title", "常用的提示问题" )
+				.insertAfter( input )
+				.button({
+					icons: {
+						primary: "ui-icon-triangle-1-s"
+					},
+					text: false
+				})
+				.css({width:'20px', height:'20px', 'vertical-align':'bottom'})
+				.removeClass( "ui-corner-all" )
+				.addClass( "ui-corner-right ui-button-icon" )
+				.click(function() {
+					// close if already visible
+					if ( input.autocomplete( "widget" ).is( ":visible" ) ) {
+						input.autocomplete( "close" );
+						return;
+					}
+
+					// pass empty string as value to search for, displaying all results
+					input.autocomplete( "search", "" );
+					input.focus();
+				});
+		},
+
+		destroy: function() {
+			this.input.remove();
+			this.button.remove();
+			this.element.show();
+			$.Widget.prototype.destroy.call( this );
+		}
+	});
+})( jQuery );
+
+$(function() {
+	$( "#question" ).combobox();
+});
+
+function resend() {
+	
+	if(jQuery.trim($('#resendcode').val())=='') {
+		$('#tips').html('请先填写验证码，再点击重发注册邮件。');
+		$('#checkDialog').dialog('open');
+		return false;
+	}
+	
+	$.blockUI();
+	
+	$.post(
+		Server+"/billingCN/UserControl",
+		{
+			RequestType: 'ResendActivation',
+			LoginUsername: $('#username').val(),
+			code: $('#resendcode').val()
+		},
+		function(data){
+			data='<data>'+data+'</data>';
+			
+			var obj=$.createXml(data);
+			var result2=$(obj).find('status').text().toUpperCase();
+
+			$('#resendimg').click();	
+			if(result2=='USER_NOT_EXIST') {
+				$('#tips').html('用户名已不存在，请与管理员联系。');
+				$('#checkDialog').dialog('open');
+			}else if(result2=='VALID') {
+				$('#ok_tips').html('注册邮件已发送至您的邮箱，请注意查收。');
+				$('#okDialog').dialog('open');	
+			}else if(result2=='WRONG_CODE') {
+				$('#tips').html('验证码错误，请重新填写。');
+				$('#checkDialog').dialog('open');	
+			}else{
+				//alert(data);
+				$('#tips').html('系统错误（'+result2+'），请与联系管理员。');
+				$('#checkDialog').dialog('open');						
+			}
+		}
+	);	
+}
+
+
+</script>
+<style>*{font-family:"微软雅黑";}td{vertical-align:middle;}</style>
+</head>
+
+
+<body id="body">
+
+
+
+<div id="main_frame" class="reg_frame" style='height:940px;'> <!--124px-->
+
+<div style="margin:0;padding:0;border:0;position:relative;">
+
+  <span style="width:55px;height:20px;position:absolute;right:10px;top:5px;">
+    <button style="cursor:pointer;width:100%;background:#f0f0f0;border:0;white-space:nowrap;color:black;" onclick="location.replace('../../index.html');return false;">回到主页</button>
+  </span>
+</div>
+
+<div style="margin:0;padding:0;border:0;height:24px;background:#e0e0e0;text-align:left;vertical-align:bottom;cursor:default;">
+	<span style="line-height:24px;margin-left:10px;color:#6e6e6e;">当前位置：&nbsp;&nbsp;&nbsp;&nbsp;<label style="color:#6e6e6e;cursor:pointer;text-decoration:underline;" onclick="location.href='../../index.html';return false;">首页</label> >> <label style="color:#F60">会员注册</label></span>
+</div>
+
+<div id='main_content'></div>
+
+<!-- 主内容 -->
+<div id="main_content_1" style="margin:10px;padding:10px;border:1px solid silver;display:block;left:0;position:absolute;width:95%;">
+
+<div style="margin:20px;padding:0;border:0;text-align:left;">
+	<span style="color:#6e6e6e;font-size:12px;font-weight:bold;">提示：请填写你真实有效的个人信息，以便于您办理业务。我们承诺不向第三方提供您的私人信息。</span>
+</div>
+
+<div style="margin:20px;padding:0;border:0;text-align:left;color:#F60;font-weight:bold;border-bottom:2px dotted silver;">
+<img style="width:20px;border:0;padding:0;margin:0;" src="image/bigimg/reg_img_3.png" />&nbsp;&nbsp;会员登录信息
+</div>
+
+<div style="margin:20px;padding:0;border:0;text-align:left;">
+	<span style="color:#6e6e6e;font-size:12px;font-weight:bold;">注册成功后，您的用户名将成为您在ViaCloud的唯一标识。填写正确的手机号码和E-Mail地址可以使业务沟通更加及时，找回密码更加方便。</span>
+</div>
+
+<table class="reg_table">
+<tr>
+<th></th>
+<th></th>
+<th width='20px'></th>
+<th width='140px'></th>
+<th width='160px'></th>
+</tr>
+
+<!-- 基本信息 -->
+<tr style='text-align:left;'>
+	<td colspan='5' style='font-weight:bold;line-height:24px;padding-left:32px;border:1px solid silver;background:url(image/images/menu_downarrow.png) 10px center no-repeat #f0f0f0;'>基本信息</td>
+</tr>
+
+<tr style="border-bottom:1px dashed silver;">
+	<td class="reg_ltd"><label class="reg_label">登录用户名&nbsp;<label style="color:#F60;font-weight:bold;font-size:18px;">*</label>&nbsp;：</label></td>
+	<td><input id="username" class="reg_input" type="text" /></td>
+	<td><span id='tips_username'></span></td>
+	<td><div id='tips_username_2' class="text_tip_grid"></div></td>
+	<td><div>举例：ViaCloud</div></td>
+</tr>
+<tr style="">
+	<td class="reg_ltd"><label class="reg_label">&nbsp;</label></td>
+	<td><label class="reg_tips">只能使用字母，数字或者下划线<br/>（至少为6个字符，最多45个字符）</label></td>
+	<td>&nbsp;</td>
+    <td></td>
+    <td></td>
+</tr>
+
+
+
+<!-- 密码部分 -->
+<tr><td style="height:10px;">&nbsp;</td><td>&nbsp;</td></tr>
+<!--
+<tr><td colspan='3' style="padding-right:100px;"><label class="reg_label">为保护您的帐户安全,请选择一个至少8位的密码</label></td></tr>
+-->
+<tr style="border-bottom:1px dashed silver;">
+	<td class="reg_ltd"><label class="reg_label">输入密码（最短6位）&nbsp;<label style="color:#F60;font-weight:bold;font-size:18px;">*</label>&nbsp;：</label></td>
+	<td><input id="password" class="reg_input" type="password" /></td>
+	<td></td>
+    <td></td>
+	<td><div>举例：a1@163#2_3</div></td>
+</tr>
+<tr style="border-bottom:1px dashed silver;">
+	<td class="reg_ltd"><label class="reg_label">再次输入&nbsp;<label style="color:#F60;font-weight:bold;font-size:18px;">*</label>&nbsp;：</label></td>
+	<td><input id="password_2" class="reg_input" type="password" /></td>
+	<td></td>
+    <td></td>
+	<td><div></div></td>
+</tr>
+<tr style="border-bottom:1px dashed silver;">
+	<td class="reg_ltd"><label class="reg_label">密码找回提示问题（最少6位）&nbsp;<label style="color:#F60;font-weight:bold;font-size:18px;">*</label>&nbsp;：</label></td>
+	<td style="text-align:left;">
+    <select id='question' title="密码找回提示问题" style="width:200px;line-height:20px;margin:0;padding:0;">
+        <option value="web">我就读的第二所学校的名称？</option>
+        <option value="personal">我最喜欢的宠物？</option>
+        <option value="personal">我最喜欢的电影人物？</option>
+        <option value="personal">我最喜欢的歌曲？</option>
+        <option value="personal">我的初恋日期？</option>
+        <option value="personal">我的祖父有多少个孩子？</option>
+    </select>
+    <!--<input id="question" class="reg_input" type="text" />-->
+    </td>
+	<td></td>
+    <td></td>
+	<td><div>举例：我的云主机是？</div></td>
+</tr>
+<tr style="border-bottom:1px dashed silver;">
+	<td class="reg_ltd"><label class="reg_label">问题答案（最少4位）&nbsp;<label style="color:#F60;font-weight:bold;font-size:18px;">*</label>&nbsp;：</label></td>
+	<td><input id="answer" class="reg_input" type="text" /></td>
+	<td></td>
+    <td></td>
+	<td><div>举例：ViaCloud</div></td>
+</tr>
+
+
+<tr style="border-bottom:1px dashed silver;">
+	<td class="reg_ltd"><label class="reg_label">我的姓&nbsp;<label style="color:#F60;font-weight:bold;font-size:18px;">*</label>&nbsp;：</label></td>
+	<td><input id="firstname" class="reg_input" type="text" /></td>
+	<td></td>
+    <td></td>
+	<td><div></div></td>
+</tr>
+
+<tr style="border-bottom:1px dashed silver;">
+	<td class="reg_ltd"><label class="reg_label">我的名&nbsp;<label style="color:#F60;font-weight:bold;font-size:18px;">*</label>&nbsp;：</label></td>
+	<td><input id="lastname" class="reg_input" type="text" /></td>
+	<td></td>
+    <td></td>
+	<td><div></div></td>
+</tr>
+
+
+
+<tr style="border-bottom:1px dashed silver;">
+	<td class="reg_ltd"><label class="reg_label">我的邮箱是&nbsp;<label style="color:#F60;font-weight:bold;font-size:18px;">*</label>&nbsp;：</label></td>
+	<td><input id="email" class="reg_input" type="text" /></td>
+	<td><span id='tips_email'></span></td>
+	<td><span id='tips_email_t2' class="text_tip_grid"></span></td>
+	<td><div>举例：admin@viacloud.com.cn</div></td>
+</tr>
+
+<tr style="border-bottom:1px dashed silver;">
+	<td class="reg_ltd"><label class="reg_label">确认输入邮箱&nbsp;<label style="color:#F60;font-weight:bold;font-size:18px;">*</label>&nbsp;：</label></td>
+	<td><input id="email_2" class="reg_input" type="text" /></td>
+	<td><span id='tips_email_2'></span></td>
+    <td></td>
+	<td><div></div></td>
+</tr>
+<tr style="border-bottom:1px dashed silver;">
+    <td class="reg_ltd"><label class="reg_label">手机号码&nbsp;<label style="color:#F60;font-weight:bold;font-size:18px;">*</label>&nbsp;：</label></td>
+    <td><input id="etc_7" class="reg_input" type="text" /></td>
+    <td></td>
+    <td></td>
+    <td><div>举例：13400000000</div></td>
+</tr>
+
+
+
+
+
+<!-- 其它 -->
+<tr><td style="height:40px;">&nbsp;</td><td>&nbsp;</td></tr>
+
+<tr style='text-align:left;'>
+	<td colspan='5' style='font-weight:bold;line-height:24px;padding-left:32px;border:1px solid silver;background:url(image/images/menu_downarrow.png) 10px center no-repeat #f0f0f0;'>可选信息</td>
+</tr>
+<tr style="border-bottom:1px dashed silver;">
+	<td class="reg_ltd"><label class="reg_label">地址：</label></td>
+	<td><input id="etc_1" class="reg_input" type="text" /></td>
+	<td></td>
+	<td></td>
+	<td><div></div></td>
+</tr>
+<tr style="border-bottom:1px dashed silver;">
+<td class="reg_ltd"><label class="reg_label">城市：</label></td>
+<td><input id="etc_2" class="reg_input" type="text" /></td>
+<td></td>
+<td></td>
+<td><div></div></td>
+</tr>
+<tr style="border-bottom:1px dashed silver;"><td class="reg_ltd"><label class="reg_label">省：</label></td>
+<td><input id="etc_3" class="reg_input" type="text" /></td>
+<td></td>
+<td></td>
+<td><div></div></td>
+</tr>
+<!--
+<tr><td class="reg_ltd"><label class="reg_label">国家 ＊:</label></td><td><input id="etc_4" class="reg_input" type="text" /></td><td></td></tr>-->
+<tr style="border-bottom:1px dashed silver;"><td class="reg_ltd"><label class="reg_label">邮编：</label></td>
+<td><input id="etc_5" class="reg_input" type="text" /></td>
+<td></td>
+<td></td>
+<td><div></div></td>
+</tr>
+<!--
+<tr><td class="reg_ltd"><label class="reg_label">电话 ＊:</label></td><td><input id="etc_6" class="reg_input" type="text" /></td><td></td></tr>-->
+<tr style="border-bottom:1px dashed silver;">
+<td class="reg_ltd"><label class="reg_label">QQ号码：</label></td>
+<td><input id="etc_8" class="reg_input" type="text" /></td>
+<td></td>
+<td></td>
+<td><div></div></td>
+</tr>
+<tr style="border-bottom:1px dashed silver;">
+<td class="reg_ltd"><label class="reg_label">MSN：</label></td>
+<td><input id="etc_9" class="reg_input" type="text" /></td>
+<td></td>
+<td></td>
+<td><div></div></td>
+</tr>
+
+<tr style="border-bottom:1px dashed silver;">
+<td class="reg_ltd"><label class="reg_label">验证码&nbsp;<label style="color:#F60;font-weight:bold;font-size:18px;">*</label>&nbsp;：</label></label></td>
+<td><input maxlength="4" id="verifycode" class="reg_input" type="text" /></td>
+<td>&nbsp;&nbsp;&nbsp;&nbsp;<img id='verifyimg' style="width:80px;height:30px;margin:0;padding:0;border:0;border-collapse:collapse;vertical-align:middle;cursor:pointer;" title="点击换一张" /></td>
+<td><div style="line-height:28px;">（点击刷新验证码）</div></td>
+<td><div></div></td>
+</tr>
+
+<tr><td colspan="3">
+<div style="margin:10px;padding:0;border:0;text-align:center;">
+	<span style="color:#6e6e6e;font-size:12px;font-weight:bold;"><label style="color:#F60;font-weight:bold;font-size:18px;">*</label>&nbsp;为必须填写内容</span>
+</div>
+</td></tr>
+
+
+<tr>
+	<td colspan="5">
+		<div style="text-align:center;">
+			<input type="checkbox" name="etc_10" id="etc_10" />
+			<label for="etc_10" style="font-weight:bold;line-height:48px;font-size:14px;"><i>我已阅读，并理解和接受<a href="#">ViaCloud会员注册条款</a></i></label>
+			<br/><label style="font-size:12px;">（用户同意此在线注册条款之效力如同用户亲自签字、盖章的书面条款一样，对用户具有法律约束力）</label>
+		</div>
+	</td>
+</tr>
+
+<tr>
+	<td colspan="5" style="text-align:center;"><a id="regBtn" style="margin-top:15px;display:inline-block;background:url(image/bigimg/reg_img_4.png);width:165px;height:32px;cursor:pointer;" >&nbsp;</a></td>
+</tr>
+</table>
+
+
+</div>
+
+
+
+
+
+
+<!-- 主Content2 -->
+<div id="main_content_2" style="margin:10px;padding:10px;border:1px solid silver;display:none;left:0;position:absolute;width:95%;">
+
+<div style="margin:20px;padding:0;border:0;text-align:left;color:#F60;font-weight:bold;border-bottom:2px dotted silver;">
+<img style="width:20px;border:0;padding:0;margin:0;" src="image/bigimg/reg_img_3.png" />&nbsp;&nbsp;请您确认注册信息
+</div>
+
+<table class="reg_table">
+<tr><th width='200px;'></th><th></th><th width='20px'></th><th width='140px'></th></tr>
+
+
+
+<!-- 基本信息 -->
+<tr style='text-align:left;'>
+	<td colspan='4' style='font-weight:bold;line-height:24px;padding-left:32px;border:1px solid silver;background:url(image/images/menu_downarrow.png) 10px center no-repeat #f0f0f0;'>基本信息</td>
+</tr>
+<tr style='border-bottom:1px dashed silver;'>
+	<td class="reg_ltd"><label class="reg_label">登录用户名&nbsp;<label style="color:#F60;font-weight:bold;font-size:18px;">*</label>&nbsp;：</label></td>
+	<td class='reg_rtd'><label id="c_username"></label></td><td>&nbsp;</td><td>&nbsp;</td>
+</tr>
+
+<!-- 密码部分 -->
+<tr><td style="height:10px;">&nbsp;</td><td>&nbsp;</td></tr>
+<!--
+<tr><td colspan='3' style="padding-right:100px;"><label class="reg_label">为保护您的帐户安全,请选择一个至少8位的密码</label></td></tr>
+-->
+<tr style='border-bottom:1px dashed silver;'>
+	<td class="reg_ltd"><label class="reg_label">密码找回提示问题&nbsp;<label style="color:#F60;font-weight:bold;font-size:18px;">*</label>&nbsp;：</label></td>
+	<td class='reg_rtd'><label id="c_question"></label></td><td>&nbsp;</td><td>&nbsp;</td>
+</tr>
+<tr style='border-bottom:1px dashed silver;'>
+	<td class="reg_ltd"><label class="reg_label">问题答案&nbsp;<label style="color:#F60;font-weight:bold;font-size:18px;">*</label>&nbsp;：</label></td>
+	<td class='reg_rtd'><label id="c_answer"></label></td><td>&nbsp;</td><td>&nbsp;</td>
+</tr>
+
+
+<tr style='border-bottom:1px dashed silver;'>
+	<td class="reg_ltd"><label class="reg_label">我的姓&nbsp;<label style="color:#F60;font-weight:bold;font-size:18px;">*</label>&nbsp;：</label></td>
+	<td class='reg_rtd'><label id="c_firstname"></label></td><td>&nbsp;</td><td>&nbsp;</td>
+</tr>
+
+<tr style='border-bottom:1px dashed silver;'>
+	<td class="reg_ltd"><label class="reg_label">我的名&nbsp;<label style="color:#F60;font-weight:bold;font-size:18px;">*</label>&nbsp;：</label></td>
+	<td class='reg_rtd'><label id="c_lastname"></label></td><td>&nbsp;</td><td>&nbsp;</td>
+</tr>
+
+
+
+<tr style='border-bottom:1px dashed silver;'>
+	<td class="reg_ltd"><label class="reg_label">我的邮箱是&nbsp;<label style="color:#F60;font-weight:bold;font-size:18px;">*</label>&nbsp;：</label></td>
+	<td class='reg_rtd'><label id="c_email"></label></td><td>&nbsp;</td><td>&nbsp;</td>
+</tr>
+
+<tr style='border-bottom:1px dashed silver;'>
+	<td class="reg_ltd"><label class="reg_label">手机号码&nbsp;<label style="color:#F60;font-weight:bold;font-size:18px;">*</label>&nbsp;：</label></td>
+	<td class='reg_rtd'><label id="c_mobile"></label></td><td>&nbsp;</td><td>&nbsp;</td>
+</tr>
+
+
+
+
+
+<!-- 其它 -->
+<tr><td style="height:40px;">&nbsp;</td><td>&nbsp;</td></tr>
+<tr style='text-align:left;'>
+	<td colspan='4' style='font-weight:bold;line-height:24px;padding-left:32px;border:1px solid silver;background:url(image/images/menu_downarrow.png) 10px center no-repeat #f0f0f0;'>可选信息</td>
+</tr>
+<tr style='border-bottom:1px dashed silver;'>
+	<td class="reg_ltd"><label class="reg_label">地址：</label></td>
+	<td class='reg_rtd'><label id="c_etc_1"></label></td>
+	<td>&nbsp;</td><td>&nbsp;</td>
+</tr>
+<tr style='border-bottom:1px dashed silver;'>
+	<td class="reg_ltd"><label class="reg_label">城市：</label></td>
+	<td class='reg_rtd'><label id="c_etc_2"></label></td>
+	<td>&nbsp;</td><td>&nbsp;</td>
+</tr>
+<tr style='border-bottom:1px dashed silver;'>
+	<td class="reg_ltd"><label class="reg_label">省：</label></td>
+	<td class='reg_rtd'><label id="c_etc_3"></label></td>
+	<td>&nbsp;</td><td>&nbsp;</td>
+</tr>
+<!--
+<tr style='border-bottom:1px dashed silver;'><td class="reg_ltd"><label class="reg_label">国家 ＊:</label></td><td><input id="etc_4" class="reg_input" type="text" /></td><td></td></tr>-->
+<tr style='border-bottom:1px dashed silver;'>
+	<td class="reg_ltd"><label class="reg_label">邮编：</label></td>
+	<td class='reg_rtd'><label id="c_etc_5"></label></td>
+	<td>&nbsp;</td><td>&nbsp;</td>
+</tr>
+<!--
+<tr style='border-bottom:1px dashed silver;'><td class="reg_ltd"><label class="reg_label">电话 ＊:</label></td><td><input id="etc_6" class="reg_input" type="text" /></td><td></td></tr>-->
+<tr style='border-bottom:1px dashed silver;'>
+	<td class="reg_ltd"><label class="reg_label">QQ号码：</label></td>
+	<td class='reg_rtd'><label id="c_etc_8"></label></td>
+	<td>&nbsp;</td><td>&nbsp;</td>
+</tr>
+<tr style='border-bottom:1px dashed silver;'>
+	<td class="reg_ltd"><label class="reg_label">MSN：</label></td>
+	<td class='reg_rtd'><label id="c_etc_9"></label></td>
+	<td>&nbsp;</td><td>&nbsp;</td>
+</tr>
+
+
+
+
+<tr>
+	<td class="reg_ltd">&nbsp;</td>
+	<td style='height:48px;vertical-align:bottom;'><a id="subBtn" value="提交注册申请" style="float:left;background:url(image/bigimg/but02.png);width:165px;height:32px;cursor:pointer;" >&nbsp;</a>&nbsp;&nbsp;</td>
+	<td style='height:48px;vertical-align:bottom;'><a id="retBtn" value="返回" style="float:left;background:url(image/bigimg/but01.png);width:88px;height:32px;cursor:pointer;" >&nbsp;</a></td>
+	<td>&nbsp;</td>
+</tr>
+</table>
+
+
+
+
+</div>
+
+
+
+<!-- 主Content3 -->
+<div id="main_content_3" style="margin:10px;padding:10px;border:1px solid silver;display:none;left:0;position:absolute;width:95%;">
+
+
+<div style="margin:20px;padding:0;border:0;text-align:left;color:#F60;font-weight:bold;border-bottom:2px dotted silver;">
+<img style="width:20px;border:0;padding:0;margin:0;" src="image/bigimg/reg_img_3.png" />&nbsp;&nbsp;注册成功
+</div>
+
+
+<div style="margin:20px;padding:0;border:0;text-align:left;font-weight:bold;border-bottom:1px dotted silver;line-height:40px;">
+<img src='image/icons/ok.png' />
+<label style="color:#0C0;font-size:16px;line-height:40px;">恭喜您<u><label style="color:#F30" id='p3_username'>&nbsp;</label></u>，您的注册已成功！</label><br/>
+确认Email已发送至您的邮箱<label style="color:#F30" id='p3_email'>&nbsp;</label>，请您注意查收。若您长时间未收到系统邮件，请检查您邮箱中的过滤设置。<br/>
+或者您可以尝试：先填写验证码&nbsp;<input id="resendcode" maxlength="4" type="text" size='4' />
+&nbsp;&nbsp;<img id='resendimg' style="width:80px;height:30px;margin:0;padding:0;border:0;border-collapse:collapse;vertical-align:middle;cursor:pointer;" title="点击换一张" />
+<label style='font-weight:normal;'>（点击刷新验证码）</label>
+，然后&nbsp;[<label title='重发注册邮件到您的邮箱' style='color:orange;text-decoration:underline;cursor:pointer;' onclick='resend();'>重发注册邮件</label>]
+<br/>
+
+</div>
+
+
+
+<div style="margin:20px;padding:0;border:0;text-align:center;">
+<!--<a id="closeBtn" value="提交注册申请" style="float:left;background:url(image/bigimg/but02.png);width:165px;height:32px;cursor:pointer;" >&nbsp;</a>-->
+<a href="#" onclick="location.replace('../../index.html');return false;">返回主页</a>
+</div>
+
+</div> <!--content 3-->
+
+
+</div> <!-- main frame -->
+
+
+<!-- check-dialog -->
+
+<div style='display:none;' id="checkDialog" title="提示">
+	<p><img src='image/bigimg/alert.png' style='width:60px;vertical-align:top;'/>
+	<label id="tips" style="line-height:40px;vertical-align:bottom;font-size:18px;font-weight:bold;">&nbsp;</label></p>
+</div>
+
+<div style="display:none;" id="successDialog" title="提示">
+	<p><label>注册成功</label></p>
+</div>
+
+<div style='display:none;' id="okDialog" title="提示">
+	<p><img src='image/bigimg/ok.png' style='width:60px;vertical-align:top;'/>
+	<label id="ok_tips" style="line-height:40px;vertical-align:bottom;font-size:18px;font-weight:bold;">&nbsp;</label></p>
+</div>
+
+<!-- 协议内容 -->
+<div style="display:none;" id='protocolContent'>
+	<div class='ui-state-highlight ui-corner-all'><span><textarea readonly id="agreeTxt" style='background-color:#f0f0ff;width:100%;height:340px;padding-bottom:5px;cursor:default;margin-bottom:5px;border:0;'></textarea></span></div><br/>
+	<input type="button" id="closeProtocol" value="关闭" /> 	
+</div>
+
+</body>
+</html>

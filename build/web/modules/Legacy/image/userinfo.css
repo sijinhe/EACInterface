@@ -1,0 +1,39 @@
+/* CSS Document */
+div {
+}
+.usr_input {
+	width:200px;
+}
+.usr_label {
+	float:right;
+	/*font-weight:bold;*/
+	padding-right:20px;
+	padding-bottom: 10px;
+}
+.usr_div {
+}
+.usr_frame {
+	border:1px silver solid;
+	padding-top:20px;
+	padding-bottom:50px;
+	margin:auto;
+	width:600px;
+}
+
+.usr_ltd {
+	width:200px;
+}
+.usr_rtd {
+	width:600px;
+}
+
+.usr_tips {
+	float:left;
+	padding-bottom:20px;
+}
+
+.usr_table {
+	white-space:nowrap;
+	margin:auto;
+	border:0;
+}

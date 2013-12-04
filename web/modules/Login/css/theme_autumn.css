@@ -1,0 +1,75 @@
+@charset "utf-8";
+/* CSS Document 
+	Author: Bill, 2011*/
+
+/**
+ * Common
+ */
+
+body {margin:0;background:url(image/theme_autumn/bg-content.png);font-family:微软雅黑;}
+
+#container {
+	margin:auto;
+	width:800px;
+	height:500px;
+	background:url(image/theme_autumn/login_bg.png) no-repeat;
+	position:relative;
+	border:5px solid orange;
+}
+
+.loginBox {	position:absolute;left:180px;top:320px;}
+
+.ctrlPanel {position:absolute;left:320px;top:64px;white-space:nowrap;}
+.ctrlPanel > .a1 {position:absolute;left:4px;top:6px;}
+.ctrlPanel > .a2 {position:absolute;left:105px;top:6px;}
+.ctrlPanel > .a3 {position:absolute;left:169px;top:6px;}
+
+.inputLine { position:absolute; left:380px; }
+.inputLine > input { background:none;}
+.inputLine.line_1 { top:0px;}
+.inputLine.line_2 { top:32px;}
+
+.messageLine {font-size:11px;color:#444;position:absolute;top:-20px;left:420px;text-align:right;background:white;white-space:nowrap;background:none;color:red;}
+
+.outline {position:absolute;left:450px;top:445px;font-size:12px;text-align:center;cursor:default;}
+.outline > a{color:blue;}
+
+.designer {position:absolute;left:0px;bottom:0px;font-size:12px;font-family:Tempus Sans IT;text-align:center;cursor:default;color: #06F;}
+
+.username{
+	float: right;
+	height: 20px;
+	width: 124px;
+	background-image: url(image/theme_autumn/home_User.gif);
+	background-repeat: no-repeat;
+	margin-right: 5px;
+	text-align: right;
+}
+.password{
+	float: right;
+	height: 20px;
+	width: 124px;
+	background-image: url(image/theme_autumn/home_password.gif);
+	background-repeat: no-repeat;
+	text-align: right;
+}
+.user_button{float: right;padding-left: 2px;}
+
+input{border:0;margin: 1px;text-align: left;}
+
+img { border: 0;}
+
+
+
+/**
+ * Specially
+ */
+#grids {position:absolute;left:29px;top:26px;z-index:64;background:none;margin:0;padding:0;}
+#animeBlock {position:absolute;left:-5px;top:-5px;width:5px;height:5px;background:red;opacity:.4;}
+#illusion {display:inline-block;position:absolute;top:260px;right:135px;}
+#illusionZ {-webkit-border-radius:5px;display:inline-block;position:absolute;width:40px;height:40px;right:0;top:0px;border:2px solid #F33;}
+#illusionY {-webkit-border-radius:5px;display:inline-block;position:absolute;width:40px;height:40px;right:0;top:0px;border:2px solid #3CF;}
+#magicube {-webkit-border-radius:2px;opacity:.5;display:inline-block;position:absolute;top:15px;right:15px;width:10px;height:10px;border:1px solid #F93;background:#F93;cursor:pointer;}
+ 
+ 
+ 

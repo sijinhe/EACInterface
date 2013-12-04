@@ -1,0 +1,407 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html dir="ltr" xml:lang="en-gb" xmlns="http://www.w3.org/1999/xhtml" lang="en-gb">
+<head>
+
+
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title></title>
+
+<link type="text/css" href="css/smoothness/jquery-ui-1.8.8.custom.css" rel="stylesheet" />
+<link rel="stylesheet" href="image/template.css" type="text/css">
+<link rel="stylesheet" href="image/constant.css" type="text/css">
+<link rel="stylesheet" href="image/custom.css" type="text/css">
+<link rel="stylesheet" href="image/register.css" type="text/css">
+
+
+<script type="text/javascript" src="js/jquery.js"></script>	
+<script type="text/javascript" src="js/jquery-ui-1.8.8.custom.min.js"></script>
+<script type="text/javascript" src="js/check.js"></script>
+<script type="text/javascript" src="../../js/base64.js"></script>
+<script type="text/javascript" src="../../js/server.js"></script>
+<script type="text/javascript" src="../../js/jquery.cookie.js"></script>
+<script type="text/javascript" src="../../js/account.js"></script>
+<script type="text/javascript" src="../../js/server.js"></script>
+<script type="text/javascript" src="js/xml.parser.js"></script>
+<script type="text/javascript" src="js/util.js"></script>
+<script type="text/javascript" src="js/jquery.blockUI.js"></script>
+
+<script language="javascript">
+$(document).ajaxStart($.blockUI).ajaxStop($.unblockUI);
+
+var url=Server+"/billingCN/UserControl";
+$(function(){
+	/* -----------初始化控件------- */
+
+	
+	getVerifyImg1();
+	$('#verifyimg').click(function() {
+		getVerifyImg1();
+		return false;
+	});	
+	
+	
+	$('#checkDialog').dialog({
+		autoOpen: false,
+		width: 600,
+		resizable: false,
+		buttons: {
+			"返回": function() { 
+				$(this).dialog("close"); 
+			}
+		}
+	});	
+	
+	
+
+	$('#subBtn1').click(function() {
+		if(jQuery.trim($('#username').val())==''
+				|| jQuery.checkstr($('#username').val(), 'username')==false 
+				|| $('#username').val().length>45){
+			$('#tips').html('请输入正确的用户名。');
+			$('#checkDialog').dialog('open');
+		}else if(jQuery.trim($('#verifycode').val())==''){
+			$('#tips').html('请输入验证码。');
+			$('#checkDialog').dialog('open');
+		}else {
+			$.post(
+				Server+"/billingCN/UserControl",
+				{
+					RequestType:'getSecQuestion',
+					LoginUsername:$('#username').val(),
+					code: $('#verifycode').val()
+				},
+				function(data){
+					data='<data>'+data+'</data>';
+					
+					var obj=$.createXml(data);
+					var result=$(obj).find('status').text().toUpperCase();
+					
+					if(result=='MISSING_INPUTS') {
+						$('#tips').html('缺少参数，请与联系管理员。');
+						$('#checkDialog').dialog('open');
+					}else if(result=='WRONG_CODE'){
+						$('#tips').html('验证码错误，请重新输入。');
+						$('#checkDialog').dialog('open');
+					}else if(result=='USER_NOT_EXIST') {
+						$('#tips').html('用户名不存在，请重新输入。');
+						$('#checkDialog').dialog('open');
+						getVerifyImg1(); // 更换验证码
+					}else if(result=='VALID') {
+						var retQue=$(obj).find('SecQuestion').text();
+						//alert(retQue);
+						$('#c_question').html(retQue);
+
+						$('#verifyimg2').attr('src', Server+"/billingCN/VerificationServlet");
+						$('#verifyimg2').click(function() {
+							$(this).attr('src', Server+"/billingCN/VerificationServlet"+'?'+Math.random());
+							return false;
+						});						
+						
+						gotoPage('#main_content_1', '#main_content_2');
+					}else{
+						//alert(data);
+						$('#tips').html('未定义的错误（'+result+'），请与联系管理员。');
+						$('#checkDialog').dialog('open');						
+					}
+				}
+			);
+		}		
+		
+		return false;
+	});
+	
+	$('#subBtn2').click(function(){
+		if($('#c_answer').val().length<4){
+			$('#tips').html('请输入正确的问题答案。');
+			$('#checkDialog').dialog('open');
+		}else if(jQuery.trim($('#verifycode2').val())==''){
+			$('#tips').html('请输入验证码。');
+			$('#checkDialog').dialog('open');
+		}else {			
+			$.post(
+				Server+"/billingCN/UserControl",
+				{
+					RequestType:'resetPasswordBySecAnswer',
+					LoginUsername:$('#username').val(),
+					SecAnswer: $('#c_answer').val(),
+					code: $('#verifycode2').val()
+				},
+				function(data){
+					data='<data>'+data+'</data>';
+					
+					var obj=$.createXml(data);
+					var result2=$(obj).find('status').text().toUpperCase();
+					
+					if(result2=='WRONG_SECQUESTION') {
+						$('#tips').html('您的问题答案不正确，请重新输入。');
+						$('#checkDialog').dialog('open');
+						getVerifyImg2(); // 更换验证码
+					}else if(result2=='WRONG_CODE'){
+						$('#tips').html('验证码错误，请重新输入。');
+						$('#checkDialog').dialog('open');
+					}else if(result2=='USER_NOT_EXIST') {
+						$('#tips').html('用户名已不存在，请与管理员联系。');
+						$('#checkDialog').dialog('open');
+					}else if(result2=='VALID') {
+						gotoPage('#main_content_2', '#main_content_3');
+					}else{
+						//alert(data);
+						$('#tips').html('未定义的错误（'+result2+'），请与联系管理员。');
+						$('#checkDialog').dialog('open');						
+					}
+				}
+			);
+		}		
+	});
+	
+	
+	
+	$('#retBtn').click(function(){
+		gotoPage('#main_content_2', '#main_content_1');
+	});
+	
+	
+	
+	
+
+	function gotoPage(from, to) {
+		if(to=='#main_content_1') {
+			window.scrollTo(0,0);
+		}else if(to=='#main_content_2') {
+			window.scrollTo(0,0);
+		}else if(to=='#main_content_3'){
+			window.scrollTo(0,0);
+		}
+				
+		$(from).hide('slide');
+		$(to).show('slide');
+		
+	}
+	
+	
+});
+
+function getVerifyImg1(){
+	$('#verifyimg').attr('src', Server+"/billingCN/VerificationServlet"+'?'+Math.random());
+}
+
+function getVerifyImg2(){
+	$('#verifyimg2').attr('src', Server+"/billingCN/VerificationServlet"+'?'+Math.random());
+}
+
+
+</script>
+
+</head>
+
+<body id="body">
+
+<div style="display:none;" id="checkDialog" title="提示">
+	<p><label id="tips">&nbsp;</label></p>
+</div>
+
+
+<div id="main_frame" class="reg_frame" style='height:750px;'> <!--124px-->
+
+<div style="margin:0;padding:0;border:0;position:relative;">
+<img style="width:950px;border:0;padding:0;margin:0;" src="image/bigimg/reg_img_0.png" />
+
+  <span style="width:50px;height:20px;position:absolute;left:740px;top:5px;">
+    <button style="cursor:pointer;width:100%;background:#f0f0f0;border:0;white-space:nowrap;color:black;" onclick="location.replace('index.htm');return false;">回到主页</button>
+  </span>
+  <span style="width:50px;height:20px;position:absolute;left:810px;top:5px;">
+    <button style="cursor:pointer;width:100%;background:#f0f0f0;border:0;white-space:nowrap;color:black;" onclick="alert('施工中');return false;">常见问题</button>
+  </span>
+  <span style="width:50px;height:20px;position:absolute;left:870px;top:5px;">
+    <button style="cursor:pointer;width:100%;background:#f0f0f0;border:0;white-space:nowrap;color:black;" onclick="alert('施工中');return false;">联系我们</button>
+  </span>
+</div>
+
+<div style="margin:0;padding:0;border:0;height:24px;background:#e0e0e0;text-align:left;vertical-align:bottom;cursor:default;">
+	<span style="line-height:24px;margin-left:10px;color:#6e6e6e;">当前位置：&nbsp;&nbsp;&nbsp;&nbsp;<label style="color:#6e6e6e;cursor:pointer;text-decoration:underline;" onclick="location.href='index.htm';return false;">首页</label> >> <label style="color:#F60">找回密码</label></span>
+</div>
+
+<div id='main_content'></div>
+
+<!-- 主内容 -->
+<div id="main_content_1" style="margin:10px;padding:10px;border:1px solid silver;display:block;left:0;position:absolute;width:95%;">
+
+
+<div style="margin:20px;margin-top:10px;padding:0;border:0;text-align:left;">
+<img style="width:450px;border:0;padding:0;margin:0;" src="image/bigimg/pwd_img_1.png" />
+</div>
+
+<div style="margin:20px;padding:0;border:0;text-align:left;">
+<img style="width:650px;border:0;padding:0;margin:0;" src="image/bigimg/reg_img_2.png" />
+</div>
+
+<div style="margin:20px;padding:0;border:0;text-align:left;">
+	<span style="color:#6e6e6e;font-size:12px;font-weight:bold;">提示：请正确填写你的个人信息，以便于为您取回密码。</span>
+</div>
+
+<div style="margin:20px;padding:0;border:0;text-align:left;color:#F60;font-weight:bold;border-bottom:2px dotted silver;">
+<img style="width:20px;border:0;padding:0;margin:0;" src="image/bigimg/reg_img_3.png" />&nbsp;&nbsp;找回密码信息
+</div>
+
+<div style="margin:20px;padding:0;border:0;text-align:left;">
+	<span style="color:#6e6e6e;font-size:12px;font-weight:bold;">正确填写完毕后，系统将重设您的密码并发送至您的邮箱，请注意查收。</span>
+</div>
+
+<table class="reg_table">
+<tr>
+<th></th>
+<th></th>
+<th width='20px'></th>
+<th width='140px'></th>
+<th width='160px'></th>
+</tr>
+
+<!-- 基本信息 -->
+<tr style="border-bottom:1px dashed silver;">
+	<td class="reg_ltd"><label class="reg_label">登录用户名&nbsp;<label style="color:#F60;font-weight:bold;font-size:18px;">*</label>&nbsp;：</label></td>
+	<td><input id="username" class="reg_input" type="text" onkeydown="if(event.keyCode==13){$('#subBtn1').click();return false;}" /></td>
+	<td><span id='tips_username'></span></td>
+	<td><div id='tips_username_2' class="text_tip_grid"></div></td>
+	<td><div></div></td>
+</tr>
+<tr style="">
+	<td class="reg_ltd"><label class="reg_label">&nbsp;</label></td>
+	<td><label class="reg_tips">请输入您要找回的用户名</label></td>
+	<td>&nbsp;</td>
+    <td></td>
+    <td></td>
+</tr>
+
+
+
+<tr style="">
+	<td class="reg_ltd"><label class="reg_label">验证码&nbsp;<label style="color:#F60;font-weight:bold;font-size:18px;">*</label>&nbsp;：</label></label></td>
+	<td><input id="verifycode" class="reg_input" type="text" onkeydown="if(event.keyCode==13){$('#subBtn1').click();return false;}" /></td>
+	<td>&nbsp;&nbsp;&nbsp;&nbsp;<img id='verifyimg' style="width:80px;height:30px;margin:0;padding:0;border:0;border-collapse:collapse;vertical-align:middle;cursor:pointer;" title="点击换一张" /></td>
+	<td><div style="line-height:28px;">（点击刷新验证码）</div></td>
+	<td><div></div></td>
+</tr>
+
+<tr><td colspan="3">
+<div style="margin:10px;padding:0;border:0;text-align:center;">
+	<span style="color:#6e6e6e;font-size:12px;font-weight:bold;"><label style="color:#F60;font-weight:bold;font-size:18px;">*</label>&nbsp;为必须填写内容</span>
+</div>
+</td></tr>
+
+
+<!-- 页1按钮 -->
+
+<tr>
+	<td class="reg_ltd">&nbsp;</td>
+	<td><a id="subBtn1" style="margin-top:12px;float:left;background:url(image/bigimg/but04.png);width:165px;height:32px;cursor:pointer;" >&nbsp;</a></td>
+	<td></td>
+</tr>
+</table>
+
+
+</div>
+
+
+
+
+
+
+<!-- 主Content2 -->
+<div id="main_content_2" style="margin:10px;padding:10px;border:1px solid silver;display:none;left:0;position:absolute;width:95%;">
+
+
+<div style="margin:20px;margin-top:10px;padding:0;border:0;text-align:left;">
+<img style="width:450px;border:0;padding:0;margin:0;" src="image/bigimg/pwd_img_2.png" />
+</div>
+
+
+<div style="margin:20px;padding:0;border:0;text-align:left;color:#F60;font-weight:bold;border-bottom:2px dotted silver;">
+<img style="width:20px;border:0;padding:0;margin:0;" src="image/bigimg/reg_img_3.png" />&nbsp;&nbsp;请填写以下问题以获取您的密码。
+</div>
+
+<table class="reg_table">
+<tr><th></th><th></th><th width='20px'></th><th width='240px'></th></tr>
+
+<!-- 密码部分 -->
+<tr>
+	<td class="reg_ltd"><label class="reg_label">密码找回提示问题&nbsp;<label style="color:#F60;font-weight:bold;font-size:18px;">*</label>&nbsp;：</label></td>
+	<td class='reg_rtd'><label id="c_question"></label></td>
+	<td></td>
+	<td></td>
+</tr>
+<tr>
+	<td class="reg_ltd"><label class="reg_label">问题答案&nbsp;<label style="color:#F60;font-weight:bold;font-size:18px;">*</label>&nbsp;：</label></td>
+	<td><input id="c_answer" class="reg_input" type="text" /></label></td>
+	<td></td>
+	<td></td>
+</tr>
+<tr>
+	<td class="reg_ltd"><label class="reg_label">验证码&nbsp;<label style="color:#F60;font-weight:bold;font-size:18px;">*</label>&nbsp;：</label></label></td>
+	<td><input id="verifycode2" class="reg_input" type="text" /></td>
+	<td>&nbsp;&nbsp;&nbsp;&nbsp;<img id='verifyimg2' style="width:80px;height:30px;margin:0;padding:0;border:0;border-collapse:collapse;vertical-align:middle;cursor:pointer;" title="点击换一张" /></td>
+	<td><div style="line-height:28px;">（点击刷新验证码）</div></td>
+</tr>
+
+
+
+
+
+
+
+
+<tr>
+	<td class="reg_ltd">&nbsp;</td>
+	<td><a id="subBtn2" style="float:left;background:url(image/bigimg/but05.png);width:165px;height:32px;cursor:pointer;" >&nbsp;</a>&nbsp;&nbsp;</td>
+	<!-- <td><a id="retBtn" value="返回" style="float:left;background:url(image/bigimg/but01.png);width:88px;height:32px;cursor:pointer;" >&nbsp;</a></td> -->
+</tr>
+</table>
+
+
+</div>
+
+
+
+
+<!-- 主Content3 -->
+<div id="main_content_3" style="margin:10px;padding:10px;border:1px solid silver;display:none;left:0;position:absolute;width:95%;">
+
+
+<div style="margin:20px;margin-top:10px;padding:0;border:0;text-align:left;">
+<img style="width:450px;border:0;padding:0;margin:0;" src="image/bigimg/pwd_img_3.png" />
+</div>
+
+
+<div style="margin:20px;padding:0;border:0;text-align:left;color:#F60;font-weight:bold;border-bottom:2px dotted silver;">
+<img style="width:20px;border:0;padding:0;margin:0;" src="image/bigimg/reg_img_3.png" />&nbsp;&nbsp;密码取回成功
+</div>
+
+
+<div style="margin:20px;padding:0;border:0;text-align:left;font-weight:bold;border-bottom:1px dotted silver;">
+<img src='image/icons/ok.png' />
+<label style="color:#0C0;font-size:16px; line-height:20px;">
+您的新密码已发送至您的注册邮箱，请注意查收。
+</label>
+</div>
+
+
+
+<div style="margin:20px;padding:0;border:0;text-align:center;">
+<!--<a id="closeBtn" value="提交注册申请" style="float:left;background:url(image/bigimg/but02.png);width:165px;height:32px;cursor:pointer;" >&nbsp;</a>-->
+<a href="#" onclick="location.replace('index.htm');return false;">返回主页</a>
+</div>
+
+</div> <!--content 3-->
+
+
+
+
+
+
+
+</div>
+
+
+</body>
+
+
+</html>

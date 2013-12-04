@@ -1,0 +1,38 @@
+body{
+	margin:0px;
+}
+
+.iconDiv{
+	text-align:center;
+	padding:0 0 0 20px;
+}
+
+.iconDiv li{
+	float: left;
+	margin-right: 30px;
+	list-style-type: none;
+	margin-bottom: 10px;
+	display: block;
+	position: relative;
+	width:120px;
+}
+
+
+
+.iconName{
+	font-family:'微软雅黑';
+	cursor:default;
+	color:#ED6A00;
+	font-weight:bold;
+	font-size:14px;
+}
+
+.icon{
+	display:block;
+	cursor:pointer;
+}
+
+.iconName{
+	cursor:pointer;
+}
+

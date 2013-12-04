@@ -1,0 +1,70 @@
+@charset "utf-8";
+.content-header {
+  cursor:default;
+  color:#4f4fff;
+}
+
+.content-header img {
+  width:20px;
+  padding-right: 4px;
+  white-space:nowrap;
+  float:left;
+}
+
+.small-icon {
+  width:26px;
+  padding-right: 4px;
+}
+
+.small-icon-2 {
+  width:18px;
+  padding-right: 4px;
+  vertical-align:bottom;
+  margin:0;
+}
+
+.middle-icon {
+  width:28px;
+  padding-right: 10px;
+  float:left;
+}
+*{
+	font-family:'微软雅黑';
+	/*font-weight:bold;*/
+}
+
+.hltext span{
+	color:red;
+	font-family:'微软雅黑';
+}
+
+.navarr em {
+	width: 60px;
+	background: url(bigimg/arrow-east.png) no-repeat 30% 0;
+	background-image: url(bigimg/arrow-east.png);
+	background-repeat-x: no-repeat;
+	background-repeat-y: no-repeat;
+	background-attachment: initial;
+	background-position-x: 30%;
+	background-position-y: 0px;
+	background-origin: initial;
+	background-clip: initial;
+	background-color: initial;
+	line-height: 200px;
+	overflow: hidden;
+	float: left;
+	height: 32px;
+}
+
+span.emph:hover{
+	/*background:orange;*/
+}
+span.userTitle{
+	font-family:'微软雅黑';
+	font-size:12px;
+	vertical-align:bottom;
+	margin-left:5px;
+	margin-right:5px;
+}
+
+

@@ -1,0 +1,376 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html dir="ltr" xml:lang="en-gb" xmlns="http://www.w3.org/1999/xhtml" lang="en-gb">
+<head>
+<meta http-equiv="LastModified" content="Mon, 29 Jun 1998 02:28:12 GMT">
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title></title>
+
+<link type="text/css" href="css/smoothness/jquery-ui-1.8.8.custom.css" rel="stylesheet" />
+
+
+<link rel="stylesheet" href="image/template.css" type="text/css">
+<link rel="stylesheet" href="image/constant.css" type="text/css">
+<link rel="stylesheet" href="image/imagegallery.css" type="text/css">
+<link rel="stylesheet" href="image/content.css" type="text/css"/>
+<link rel="stylesheet" href="image/custom.css" type="text/css"/>
+
+<script type="text/javascript" src="js/jquery.js"></script>	
+<script type="text/javascript" src="js/jquery-ui-1.8.8.custom.min.js"></script>
+<script type="text/javascript" src="../../locale.jsp"></script>
+<script type="text/javascript" src="js/check.js"></script>
+<script type="text/javascript" src="js/jquery.blockUI.js"></script>
+<script src="../../js/String.js" language="javascript"></script>
+<script type="text/javascript" src="../../js/base64.js"></script>
+<script type="text/javascript" src="../../js/server.js"></script>
+<script type="text/javascript" src="../../js/jquery.cookie.js"></script>
+<script type="text/javascript" src="../../js/account.js"></script>
+<script type="text/javascript" src="../../js/server.js"></script>
+<script type="text/javascript" src="js/xml.parser.js"></script>
+<script type="text/javascript" src="js/util.js"></script>
+
+<!--<script type="text/javascript" src="image/jquery.jNice.js"></script>-->
+
+<!--<link href="image/base.css" rel="stylesheet" type="text/css" />-->
+<!--<link href="image/jNice.css" rel="stylesheet" type="text/css" />-->
+
+<script language="javascript">
+$(document).ajaxStart($.blockUI).ajaxStop($.unblockUI);
+
+<!-- 处理参数 -->	
+var g_price='0';
+                                                                  
+<!-- ajax的处理 -->
+$(document).ready(
+	function(){
+		initLocale();
+		
+		if(getUsername()=='') {
+			// 尚未登录
+		}else {	
+			$.post(Server+"/RedDragonEnterprise/InformationRetriverServlet",
+				{
+	    			methodType: 'GETZONEINFOR'
+				}, 
+				function(data) {
+					var obj=$.createXml(data);					
+					var tmp=$(obj).find('datacentres').find('datacentre').find('mydatacentre');
+					
+					for(i=0; i<tmp.length; i++) {
+						$('#select_1').append('<option value="'+$(tmp[i]).attr('data')+'|'+$(tmp[i]).attr('provider')+'">'+$(tmp[i]).attr('lable')+'</option>');
+					}				
+				}                                                                  
+			);		
+		}		
+	}
+);
+
+
+// load ip价格
+function loadIpPrices(where, prov) {	
+	$.post(Server+"/billingCN/BillingServlet", 
+		{
+			RequestType: 'getResourcePricesByZone',
+			resourceType: 'IP',
+			zone:where
+		}, 
+		function(data) {
+			var obj=$.createXml('<data>'+data+"</data>");
+			var tmp=$(obj).find('resource');
+			
+			g_price=$(tmp).attr('price');
+			if(prov.toLowerCase()=='both'){
+				g_price=(parseFloat(g_price)*2);
+			}
+			g_price=parseFloat(g_price).toFixed(2);
+			
+			var unit_price=parseFloat($(tmp).attr('price')).toFixed(2);
+			var price_string="";
+			if(prov.toLowerCase()=='both'){
+        		price_string=Locale["ip.page.message.price.string.1"].sprintf(unit_price, g_price);
+			}else{
+        		price_string=Locale["ip.page.message.price.string.2"].sprintf(unit_price);
+			}
+      		$('#pricetips').html(price_string);
+		}
+	);
+}
+
+
+
+$(function(){
+	// Button
+	// 初始化Button
+	$("#submitBtn").button();
+
+	$("#select_1").change(function(){
+		var where=$("#select_1").val();
+		if(where!='') {
+      var segment=where.split('|');
+			loadIpPrices(segment[0], segment[1]);
+		}
+	});
+	
+	// Dialog		
+	$('#infoDialog').dialog({
+		autoOpen: false,
+		width: 400,
+		position: ['center',200],
+		dragable:false,
+		modal: true,
+		resizable: false,
+		buttons: [{
+			text: Locale["ip.dialog.button.close"], 
+			click: function() { 
+				$(this).dialog("close"); 
+			}
+		}]
+	});
+	$('#confirmDialog').dialog({
+		autoOpen: false,
+		width: 400,
+		position: ['center',200],
+		dragable:false,
+		resizable: false,
+		modal: true,
+		buttons: [
+			{
+				text: Locale["ip.dialog.button.confirm"], 
+				click: function() {
+					var tmp=$('#select_1').val();
+					//alert(tmp.substring(0, tmp.indexOf('|'))+' , '+tmp.substring(tmp.indexOf('|')+1, tmp.length));
+				
+					$.post(Server+"/RedDragonEnterprise/NetWorkServlet", 
+						{
+							methodtype: 'addipaddressxml',
+							Password: getPassword(),
+							loginUser: getUsername(),
+							userType: $('#select_2').val(),
+							zone: tmp.substring(0, tmp.indexOf('|')),
+							provider: tmp.substring(tmp.indexOf('|')+1, tmp.length)
+						}, 
+						function(data) {
+							var obj=$.createXml(data);
+							userStatusCheck(obj); // 登陆状态检测
+							
+							var result=$(obj).find('domain').find('status').text();
+							var tips='';
+							switch(result.toLowerCase()) {
+								case'noip':
+									tips=Locale["ip.page.message.noip"];
+									break;
+								case 'personal':
+								case 'successful':
+									tips=Locale["ip.page.message.successful"].sprintf("<span style='color:red;vertical-align:bottom;font-family:微软 font-weight:18px;雅黑;'>"+Locale["ip.page.message.successful.keyword"]+"</span>");
+									break;
+								case 'fail':
+									tips=Locale["ip.page.message.fail"];
+									break;
+								case 'web':
+									tips=Locale["ip.page.message.web"];
+									break;
+								case 'lowbalance':
+									tips=Locale["ip.page.message.lowbalance"];
+									break;
+								default:
+									tips=Locale["ip.page.message.undefined"].sprintf(result);
+									break;
+							}
+							
+							if(result.toLowerCase()=='web' 
+									|| result.toLowerCase()=='successful'
+									|| result.toLowerCase()=='personal'){
+								$('#ok_tips').html(tips);
+								$('#okDialog').dialog("open");
+							}else{
+								$('#err_tips').html(tips);
+								$('#errDialog').dialog("open");
+							} 
+						}
+					);	
+					
+					$('#select_1_dopt').attr('selected', 'selected');
+					$('#select_2_dopt').attr('selected', 'selected');
+					$(this).dialog("close"); 
+					
+				}
+			},
+			{
+				text: Locale["ip.dialog.button.cancel"],
+				click: function() { 
+					$(this).dialog("close"); 
+				}
+			}
+		]
+	});
+	
+	$('#okDialog').dialog({
+		autoOpen: false,
+		width: 400,
+		modal: true,
+		draggable: false,
+		position: ['center',200],
+		resizable: false,
+		buttons: [{
+			text: Locale["ip.dialog.button.close"], 
+			click: function() { 
+				$(this).dialog("close"); 
+			}
+		}]
+	});
+	
+	$('#errDialog').dialog({
+		autoOpen: false,
+		width: 400,
+		modal: true,
+		draggable: false,
+		position: ['center',200],
+		resizable: false,
+		buttons: [{
+			text: Locale["ip.dialog.button.close"], 
+			click: function() { 
+				$(this).dialog("close"); 
+			}
+		}]
+	});
+	
+		
+	// Dialog Link
+	// 提交
+	$('#submitBtn').click(function(){
+		var tips="";
+		var isok=true;
+		if($('#select_1').val()=='') {
+			tips=Locale["ip.page.message.choose.datacenter"];
+			isok=false;
+		}else if($('#select_2').val()=='') {
+			tips=Locale["ip.page.message.choose.usertype"];
+			isok=false;
+		}
+		
+		if(!isok) {
+			$('#tips').html(tips);
+			$('#infoDialog').dialog('open');
+		}else {
+			$('#confirm').html(Locale["ip.page.confirm.buy.ip"].sprintf('<label style="color:red;font-size:18px;line-height:40px;">'+g_price+'</label>'));
+			$('#infoDialog').dialog('close');
+			$('#confirmDialog').dialog('open');
+		}
+	
+		return false;
+	});
+	
+});
+
+function initLocale() {
+	$("#infoDialog").attr("title", Locale["ip.dialog.title.tips"]);
+	$("#confirmDialog").attr("title", Locale["ip.dialog.title.confirm"]);
+	$("#okDialog").attr("title", Locale["ip.dialog.title.tips"]);
+	$("#errDialog").attr("title", Locale["ip.dialog.title.tips"]);
+	
+	$("#banner").html(Locale["ip.banner"]);
+	$("#ip_title").html(Locale["ip.page.title"]);
+	$("#notice_title").html(Locale["ip.page.notice.title"]);
+	$("#notice_content").html(Locale["ip.page.notice.content"]);
+	
+	$("#label_ip_price").html(Locale["ip.page.price.title"]);
+	$("#pricetips").html(Locale["ip.page.price.datacenter"]);
+	
+	$("#select_1_dopt").html(Locale["ip.page.option.choose.datacenter"]);
+	$("#select_2_dopt").html(Locale["ip.page.option.choose.usertype"]);
+	$("#select_2").children("option[value='web']").html(Locale["ip.page.option.web"]);
+	$("#select_2").children("option[value='personal']").html(Locale["ip.page.option.personal"]);
+	
+	$("#submitBtn").html(Locale["ip.page.button.buy"]);
+	
+}
+
+</script>
+<style type="text/css">
+
+</style>
+
+</head>
+
+<body id="body">
+
+<!-- check-dialog -->
+
+<div style='display:none;' id="infoDialog">
+	<p><img src='image/bigimg/alert.png' style='vertical-align:top;'/>
+	<label id="tips" style="line-height:40px;vertical-align:bottom;font-size:12px; font-weight:bold;">&nbsp;</label></p>
+</div>
+
+<div style='display:none;' id="confirmDialog">
+	<p><img src='image/bigimg/alert.png' style='vertical-align:top;'/>
+	<label id="confirm" style="line-height:40px;vertical-align:bottom;font-size:12px; font-weight:bold;">&nbsp;</label></p>
+</div>
+
+<div style='display:none;' id="okDialog">
+	<p><img src='image/bigimg/ok.png' style='vertical-align:top;'/>
+	<label id="ok_tips" style="line-height:40px;vertical-align:bottom;font-size:12px;font-weight:bold;">&nbsp;</label></p>
+</div>
+
+<div style='display:none;' id="errDialog">
+	<p><img src='image/bigimg/close.png' style='vertical-align:top;'/>
+	<label id="err_tips" style="line-height:40px;vertical-align:bottom;font-size:12px;font-weight:bold;">&nbsp;</label></p>
+</div>
+
+
+<!-- 标题 -->
+<!-- <div id="tabs"><ul><li class="content-header"><img src='image/images/internet.png'/>购买IP地址：</li></ul> -->
+<div>
+	<!--
+	<label style="text-align:left;font-weight:bold;font-size:16px;display:block;line-height:24px;padding:10px 0 10px 20px;">
+购买IP地址：
+	</label>-->
+    
+    <!--<div style="width:100%; height:130px; background: url(image/new/bg.png)"></div>-->
+    
+    <div style=" padding:40px 0 0 0;  "> <!--style="background:-webkit-gradient(linear,left top,left 44,from(#ffeba5),to(#ffdb71));  border-bottom:1px solid #ffbe00;"-->
+    	<label style="text-align:left;display:block;line-height:24px;background:url(image/new/bg2.png)">
+			<span id="banner" style="position: relative;color:#222;font-size:20px;font-family:'微软雅黑'; padding:5px;background-color:#FFF; font-weight:bold; margin-left:100px;"></span>
+		</label>
+    </div>
+    
+<div style="margin:30px 60px 0 60px; min-width:779px;">
+<div id="ip_title" style=" font-family:'微软雅黑';font-size:20px; padding:10px 0 10px 5px;  color: #000; margin-bottom:30px; border-bottom:1px dotted #999;"></div>
+    <div style="float:left; display: inline-block; width:450px;border: 1px #c6c6c6 solid; -moz-border-radius: 1em;-webkit-border-radius: 1em;border-radius: 1em; padding:15px; margin-right:60px; white-space:nowrap;">
+		<label style="text-align:left;font-weight:bold;font-size:12px;display:block;line-height:24px;padding:5px 0 0 20px;">
+    		<img src="image/new/info.png" class="small-icon" style="padding-right:10px;" />
+    		<span id="notice_title"><!-- Notice Title --></span> 
+		</label>	
+	
+		<label id="notice_content" style="text-align:left;color:#222;font-size:12px;display:block;line-height:24px;padding:5px 0px 10px 20px;white-space:normal;">
+			<!-- Notice Content -->
+		</label>
+    </div>
+
+	<div style='text-align:left;vertical-align:middle; float:left; display:inline; padding-top:40px;'>
+		<img class="middle-icon" src="image/images/to_go.png" />
+		<label style='line-height:28px; font-weight:bold;'>
+			<span id="label_ip_price"></span> 
+			<label id='pricetips' style='color:red;line-height:28px;'></label>
+		</label>
+   		<div>
+			<select id='select_1' style="width:160px;margin-right:20px;">
+				<option id='select_1_dopt' disabled="disabled" selected="selected"></option>
+			</select>
+			<select id='select_2' style="width:160px;margin-right:20px;">
+				<option id='select_2_dopt' disabled="disabled" selected="selected"></option>
+				<option value="web"></option>
+				<option value="personal"></option>
+			</select>
+			<a href='#' id="submitBtn" style="vertical-align:middle;"></a>
+        <!--  style='top:-5px;' -->
+		</div>
+	</div>
+</div>
+<!-- 
+</div>
+ -->
+	
+<br/>
+
+
+</body>
+</html>

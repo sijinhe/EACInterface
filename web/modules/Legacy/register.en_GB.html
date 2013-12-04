@@ -1,0 +1,1010 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html dir="ltr" xml:lang="en-gb" xmlns="http://www.w3.org/1999/xhtml" lang="en-gb">
+<head>
+
+
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <title>Register</title>
+
+<link type="text/css" href="css/smoothness/jquery-ui-1.8.8.custom.css" rel="stylesheet" />
+
+
+<link rel="stylesheet" href="image/template.css" type="text/css">
+<link rel="stylesheet" href="image/constant.css" type="text/css">
+<link rel="stylesheet" href="image/custom.css" type="text/css">
+<link rel="stylesheet" href="image/imagegallery.css" type="text/css">
+<link rel="stylesheet" href="image/register.css" type="text/css">
+<link rel="stylesheet" href="image/jquery.bt.css" type="text/css">
+<link rel="stylesheet" href="image/tip-yellowsimple/tip-yellowsimple.css" type="text/css" />
+
+<script type="text/javascript" src="js/jquery.js"></script>	
+<script type="text/javascript" src="js/jquery-ui-1.8.8.custom.min.js"></script>
+<script type="text/javascript" src="../../locale.jsp"></script>
+<script type="text/javascript" src="js/check.js"></script>
+<script type="text/javascript" src="../../js/base64.js"></script>
+<script type="text/javascript" src="../../js/server.js"></script>
+<script type="text/javascript" src="../../js/jquery.cookie.js"></script>
+<script type="text/javascript" src="../../js/account.js"></script>
+<script type="text/javascript" src="../../js/server.js"></script>
+<script type="text/javascript" src="js/xml.parser.js"></script>
+<script type="text/javascript" src="js/jquery.blockUI.js"></script>
+<script type="text/javascript" src="js/jquery.lightbox-0.5.pack.js"></script>
+<script type="text/javascript" src="js/util.js"></script>
+<script type="text/javascript" src="js/jquery.bt.min.js"></script>
+<script type="text/javascript" src="js/jquery.poshytip.js"></script>
+
+<!--<script type="text/javascript" src="image/jquery.jNice.js"></script>-->
+
+<!--<link href="image/base.css" rel="stylesheet" type="text/css" />-->
+<!--<link href="image/jNice.css" rel="stylesheet" type="text/css" />-->
+
+<script language="javascript">
+$(document).ajaxStop($.unblockUI);
+
+
+var g_username='';
+var g_email='';
+
+$(function(){
+	// 初始化各种component
+	// Button
+	//$("#subBtn").button();
+	//$("#radioset").buttonset();
+
+	if(jQuery.browser.msie && jQuery.browser.version.indexOf(6.)>-1) {
+		//alert('not supported');
+		$(document.body).html('<h3 style="margin:100px;">Supported Browsers are IE 7+，Firefox，Chrome，Safari，Opera<br/>Thanks for your support</h3>');
+	}
+
+	// 注册验证码
+	$('#verifyimg').attr('src', Server+"/billingCN/VerificationServlet"+'?'+Math.random());
+	$('#verifyimg').click(function() {
+		$(this).attr('src', Server+"/billingCN/VerificationServlet"+'?'+Math.random());
+		return false;
+	});
+	
+	// 重发验证码
+	$('#resendimg').click(function(){
+		$(this).attr('src', Server+"/billingCN/VerificationServlet"+'?'+Math.random());
+		return false;
+	});
+	
+
+	// Dialog
+	$('#checkDialog').dialog({
+		autoOpen: false,
+		width: 680,
+		//position: ['center',200],
+		dragable: false,
+		resizable: false,
+		modal: true,
+		buttons: {
+			"Go Back": function() { 
+				$(this).dialog("close"); 
+			}
+		}
+	});
+	
+	$('#okDialog').dialog({
+		autoOpen: false,
+		width: 680,
+		modal: true,
+		draggable: false,
+		//position: ['center',200],
+		resizable: false,
+		buttons: {
+			"Close": function() { 
+				$(this).dialog("close"); 
+			}
+		}
+	});
+	
+	
+	
+	// Success Dialog
+	$('#successDialog').dialog({
+		autoOpen: false,
+		width: 600,
+		resizable: false,
+		buttons: {
+			"Confirm": function() { 
+				location.href='../../index.html';
+			}
+		}
+	});
+	
+	// 协议窗口
+    $('#protocol').click(function() { 
+		
+        $.blockUI({
+			message: $('#protocolContent'), 
+			css: {
+				cursor: 'default',
+				margin: 'auto',
+				top: '100px',
+				width: '500px',
+				height: '400px'
+			}
+		});
+		
+        $('.blockOverlay').click($.unblockUI); 
+		return false;
+    }); 
+	
+	var tips="";
+	// Dialog Link
+	// 正确性检测, 并dialog提示
+	$('#regBtn').click(function(){
+		//gotoPage('#main_content_1', '#main_content_2');
+		//return false;
+		
+		//alert($('#question_ex').val());
+		//return false;
+		
+		var isok=true;
+		
+		if(jQuery.trim($('#username').val())=="") { 
+			isok=false;
+			tips='Username cannot be empty。';
+		}else if(jQuery.checkstr($('#username').val(), 'username')==false 
+				|| $('#username').val().length>45
+				|| $('#username').val().length<6) {
+			isok=false;
+			tips='Usernae can only be chars, numbers and _，at least 6 chars and 45 chars at most.';
+		}else if($('#firstname').val()=='') {
+			isok=false;
+			tips='Surname cannot be empty.';
+		}else if($('#lastname').val()=='') {
+			isok=false;
+			tips='First name cannot be empty.';
+		}else if($('#email').val()=='') {
+			isok=false;
+			tips='Email cannot be empty.';
+		}else if(jQuery.checkstr($('#email').val(), 'email')==false 
+				|| $('#email').val() != $('#email_2').val()){
+			isok=false;
+			tips='Please confirm your email';
+		}else if($('#password').val().length<6 || $('#password').val().length>45) {
+			isok=false;
+			tips='Password needs to be at least 6 chars long.';
+		}else if($('#password').val() != $('#password_2').val()) {
+			isok=false;
+			tips='Please confirm your password.';						
+		}else if($('#question_ex').val().length<6) {
+			isok=false;
+			tips='Password retrieve question has to be at least 6 chars long';
+		}else if($('#answer').val().length<4) {
+			isok=false;
+			tips='Answers has to be at least 4 chars long';				
+		}/*else if(jQuery.trim($('#etc_1').val()) == '') {
+			isok=false;
+			tips='地址不能为空';						
+		}else if(jQuery.trim($('#etc_2').val()) == '') {
+			isok=false;
+			tips='城市不能为空';						
+		}else if(jQuery.trim($('#etc_3').val()) == '') {
+			isok=false;
+			tips='省不能为空';						
+		}else if(jQuery.trim($('#etc_4').val()) == '') {
+			isok=false;
+			tips='国家不能为空';						
+		}else if(jQuery.trim($('#etc_5').val()) == '') {
+			isok=false;
+			tips='邮编不能为空';						
+		}*//*else if(jQuery.checkstr($('#etc_5').val(), 'postcode')==false && jQuery.trim($('#etc_5').val()) != '') {
+			isok=false;
+			tips='邮编不正确。';
+		}/*else if(jQuery.trim($('#etc_6').val()) == '') {
+			isok=false;
+			tips='电话号码不能为空';						
+		}else if(jQuery.checkstr($('#etc_6').val(), 'tel')==false) {
+			isok=false;
+			tips='电话号码不正确';	
+		}*/else if(jQuery.trim($('#etc_7').val()) == '') {
+			isok=false;
+			tips='Mobile number cannot be empty.';
+		}/*else if(jQuery.checkstr($('#etc_7').val(), 'mobile')==false) {
+			isok=false;
+			tips='手机号码不正确。';
+		}*/else if(jQuery.trim($('#etc_8').val()) != '' 
+				&& jQuery.checkstr($('#etc_8').val(), 'qq')==false) {
+			isok=false;
+			tips='QQ needs to be numbers only.';
+		}else if(jQuery.trim($('#etc_9').val()) != '' 
+				&& jQuery.checkstr($('#etc_9').val(), 'email')==false) {
+			isok=false;
+			tips='Wrong MSN.';
+		}else if(jQuery.trim($('#verifycode').val())==''){
+			isok=false;
+			tips='Please input verification code.';
+		}else if($('#etc_10').attr('checked')==false){
+			isok=false;
+			tips='Please read and accet the terms and conditions.';
+		}
+	
+		if(!isok) {
+			$('#tips').html(tips);
+			$('#checkDialog').dialog('open');
+		}else {
+			
+			$('#c_username').html($('#username').val());
+			$('#c_firstname').html($('#firstname').val());
+			$('#c_lastname').html($('#lastname').val());
+			$('#c_email').html($('#email').val());
+			$('#c_etc_1').html($('#etc_1').val());
+			$('#c_etc_5').html($('#etc_5').val());
+			$('#c_question').html($('#question_ex').val());
+			$('#c_answer').html($('#answer').val());
+			$('#c_etc_2').html($('#etc_2').val());
+			$('#c_etc_3').html($('#etc_3').val());
+			
+			$('#c_etc_8').html($('#etc_8').val());
+			$('#c_etc_9').html($('#etc_9').val());
+			$('#c_mobile').html($('#etc_7').val());
+			
+			gotoPage('#main_content_1', '#main_content_2');
+			//register_submit();
+		}
+		
+		return false;
+	});
+	$('#retBtn').click(function() {
+		$('#verifyimg').click();
+		gotoPage('#main_content_2', '#main_content_1');
+		return false;
+	});
+	$('#subBtn').click(function() {
+		register_submit();
+		return false;
+	});
+
+	// Datepicker
+	$('#datepicker').datepicker({
+		inline: true
+	});
+	
+	// Slider
+	$('#slider').slider({
+		range: true,
+		values: [17, 67]
+	});	
+	
+	
+});
+
+// 提交注册
+function register_submit() {
+	//gotoPage('#main_content_2', '#main_content_3');
+	//return false;
+	
+	g_username=$('#username').val();
+	g_email=$('#email').val();
+	
+	$.blockUI();
+	//alert(jQuery.trim($('#verifycode').val()));
+	$.post(
+		Server+"/billingCN/UserControl",
+		{
+			RequestType: 'Register',
+			LoginUsername: $('#username').val(),
+			Password: $('#password').val(),
+			Firstname: $('#firstname').val(),
+			Lastname: $('#lastname').val(),
+			Email: $('#email').val(),
+			Address: $('#etc_1').val(),
+			Postcode: $('#etc_5').val(),
+			SecurityQuestion: $('#question_ex').val(),
+			SecurityAnswer: $('#answer').val(),
+			City: $('#etc_2').val(),
+			Region: $('#etc_3').val(),
+			Phone: '',//$('#etc_6').val()
+			QQ: $('#etc_8').val(),
+			MSN: $('#etc_9').val(),
+			MobileNo: $('#etc_7').val(),
+			code: jQuery.trim($('#verifycode').val())
+		},
+		function(data) {
+			var obj=$.createXml(data);
+			var result=$(obj).find('status').text().toLowerCase();
+			var info='';
+			
+			switch(result) {
+				case 'email exists':info='Email has been taken.';break;
+				case 'user exists':info='Username exists';break;
+				case 'bad_email_address':info='Wrong email address误。';break;
+				case 'fault':info='Errors.';break;
+				case 'valid':info='Registration Completed.';	break;
+				case 'wrong_code':info='Wrong/Expired Verification Code.';	break;
+				default:info='Unknown Return Value：'+result;
+			}
+			
+			if(result=='valid') {
+				$('#p3_username').html(g_username);
+				$('#p3_email').html(g_email);
+				$('#resendimg').attr('src', Server+"/billingCN/VerificationServlet"+'?'+Math.random());
+				gotoPage('#main_content_2', '#main_content_3');
+			}else{
+				$('#tips').html(info);
+				$('#checkDialog').dialog('open');
+			}
+		}
+	);
+};
+			
+$(document).ready(function(){
+	// 用户名存在性check
+	$('#username').blur(function() {
+		$.post(
+			Server+"/billingCN/UserControl",
+			{
+				RequestType: 'checkLogin',
+				LoginUsername: $('#username').val()
+			},
+			function(data) {
+				//alert(data);
+				var obj=$.createXml('<root>'+data+'</root>');
+				var result=$(obj).find('status').text();
+				if(result.toLowerCase()=='user_exists' 
+					|| jQuery.trim($('#username').val())==''
+					|| $('#username').val().length>45
+					|| $('#username').val().length<6
+					|| jQuery.checkstr($('#username').val(), 'username')==false) {					
+					$('#tips_username').html('<span class="ui-icon ui-icon-close"></span>');
+					$('#tips_username_2').html('Username exists');
+					//$('#tips_username_2').bt('111111111111111');
+				}else if(result.toLowerCase()=='login_not_exist') {
+					$('#tips_username').html('<span class="ui-icon ui-icon-check"></span>');
+					$('#tips_username_2').html('');
+				}
+			}
+		);
+	});
+	
+	// 邮箱存在性check
+	$('#email').blur(function() {
+		$.post(
+			Server+"/billingCN/UserControl",
+			{
+				RequestType: 'checkEmail',
+				Email: $('#email').val()
+			},
+			function(data) {
+				var obj=$.createXml('<root>'+data+'</root>');
+				var result=$(obj).find('status').text();
+				if(result.toLowerCase()=='email_exists' 
+					|| jQuery.trim($('#email').val())==''
+					|| jQuery.checkstr($('#email').val(), 'email')==false) {
+					
+					$('#tips_email').html('<span class="ui-icon ui-icon-close"></span>');
+					$('#tips_email_t2').html('Email address exists');
+				}else if(result.toLowerCase()=='email_not_exist') {
+					$('#tips_email').html('<span class="ui-icon ui-icon-check"></span>');
+					$('#tips_email_t2').html('');
+				}
+			}
+		);
+	});
+	
+	// 邮箱确认验证
+	$('#email_2').blur(function() {
+		if($('#email').val() != $('#email_2').val() || jQuery.trim($('#email_2').val())=='' ) {
+			$('#tips_email_2').html('<span class="ui-icon ui-icon-close"></span>');
+		}else {
+			$('#tips_email_2').html('<span class="ui-icon ui-icon-check"></span>');
+		}
+	});
+	
+	// 条款文本初始化
+	//$('#closeProtocol').button();
+	$.get('txt/agreement.txt', 
+		function(data) {
+			$('#agreeTxt').val(data);
+		}
+	);
+	/**
+	$('#closeProtocol').click(function() {
+		$.unblockUI();
+	});
+	*/
+	
+	$('input[type=text],input[type=password]').attr('style', '{border:1px solid silver;height:16px;}');
+	
+	//$('#main_content').append($('#main_content_1'));
+	
+});
+
+function gotoPage(from, to) {
+	if(to=='#main_content_1') {
+		//$('#main_frame').attr('style', '{height:1200px;}');//1200
+		window.scrollTo(0,480);
+	}else if(to=='#main_content_2') {
+		//$('#main_frame').attr('style', '{height:700px;}');//700
+		window.scrollTo(0,100);
+	}else if(to=='#main_content_3'){
+		//$('#main_frame').attr('style', '{height:80px;}');
+		window.scrollTo(0,0);
+	}
+			
+	$(from).hide('slide');
+	$(to).show('slide');
+	
+}
+
+
+(function( $ ) {
+	$.widget( "ui.combobox", {
+		_create: function() {
+			var self = this,
+				select = this.element.hide(),
+				selected = select.children( ":selected" ),
+				value = selected.val() ? selected.text() : "";
+			var input = this.input = $( "<input>" )
+				.insertAfter( select )
+				.attr('id', select.attr('id')+'_ex')
+				.css({width:'180px'})
+				.val( value )
+				.autocomplete({
+					delay: 0,
+					minLength: 0,
+					source: function( request, response ) {
+						var matcher = new RegExp( $.ui.autocomplete.escapeRegex(request.term), "i" );
+						response( select.children( "option" ).map(function() {
+							var text = $( this ).text();
+							if ( this.value && ( !request.term || matcher.test(text) ) )
+								return {
+									label: text.replace(
+										new RegExp(
+											"(?![^&;]+;)(?!<[^<>]*)(" +
+											$.ui.autocomplete.escapeRegex(request.term) +
+											")(?![^<>]*>)(?![^&;]+;)", "gi"
+										), "<strong>$1</strong>" ),
+									value: text,
+									option: this
+								};
+						}) );
+					},
+					select: function( event, ui ) {
+						ui.item.option.selected = true;
+						self._trigger( "selected", event, {
+							item: ui.item.option
+						});
+					},
+					change: function( event, ui ) {
+						if ( !ui.item ) {
+							var matcher = new RegExp( "^" + $.ui.autocomplete.escapeRegex( $(this).val() ) + "$", "i" ),
+								valid = false;
+							select.children( "option" ).each(function() {
+								if ( $( this ).text().match( matcher ) ) {
+									this.selected = valid = true;
+									return false;
+								}
+							});
+							/*
+							if ( !valid ) {
+								// remove invalid value, as it didn't match anything
+								$( this ).val( "" );
+								select.val( "" );
+								input.data( "autocomplete" ).term = "";
+								return false;
+							}
+							*/
+						}
+					}
+				})
+				.addClass( "ui-widget ui-widget-content ui-corner-left" );
+
+			input.data( "autocomplete" )._renderItem = function( ul, item ) {
+				return $( "<li></li>" )
+					.data( "item.autocomplete", item )
+					.append( "<a>" + item.label + "</a>" )
+					.appendTo( ul );
+			};
+
+			this.button = $( "<button type='button'>&nbsp;</button>" )
+				.attr( "tabIndex", -1 )
+				.attr( "title", "Frequently Asked Questions" )
+				.insertAfter( input )
+				.button({
+					icons: {
+						primary: "ui-icon-triangle-1-s"
+					},
+					text: false
+				})
+				.css({width:'20px', height:'20px', 'vertical-align':'bottom'})
+				.removeClass( "ui-corner-all" )
+				.addClass( "ui-corner-right ui-button-icon" )
+				.click(function() {
+					// close if already visible
+					if ( input.autocomplete( "widget" ).is( ":visible" ) ) {
+						input.autocomplete( "close" );
+						return;
+					}
+
+					// pass empty string as value to search for, displaying all results
+					input.autocomplete( "search", "" );
+					input.focus();
+				});
+		},
+
+		destroy: function() {
+			this.input.remove();
+			this.button.remove();
+			this.element.show();
+			$.Widget.prototype.destroy.call( this );
+		}
+	});
+})( jQuery );
+
+$(function() {
+	$( "#question" ).combobox();
+});
+
+function resend() {
+	
+	if(jQuery.trim($('#resendcode').val())=='') {
+		$('#tips').html('Please input the verification code first before re-sent email.');
+		$('#checkDialog').dialog('open');
+		return false;
+	}
+	
+	$.blockUI();
+	
+	$.post(
+		Server+"/billingCN/UserControl",
+		{
+			RequestType: 'ResendActivation',
+			LoginUsername: $('#username').val(),
+			code: $('#resendcode').val()
+		},
+		function(data){
+			data='<data>'+data+'</data>';
+			
+			var obj=$.createXml(data);
+			var result2=$(obj).find('status').text().toUpperCase();
+
+			$('#resendimg').click();	
+			if(result2=='USER_NOT_EXIST') {
+				$('#tips').html('User name does not exist.');
+				$('#checkDialog').dialog('open');
+			}else if(result2=='VALID') {
+				$('#ok_tips').html('Registration email has been sent to your email box。');
+				$('#okDialog').dialog('open');	
+			}else if(result2=='WRONG_CODE') {
+				$('#tips').html('Wrong verification code.');
+				$('#checkDialog').dialog('open');	
+			}else{
+				//alert(data);
+				$('#tips').html('System error（'+result2+'），Please contact our system admin.');
+				$('#checkDialog').dialog('open');						
+			}
+		}
+	);	
+}
+
+
+</script>
+<style>td{vertical-align:middle;}.STYLE1 {
+	font-size: 12px;
+	color: #6e6e6e;
+}
+</style>
+</head>
+
+
+<body id="body">
+
+
+
+<div id="main_frame" class="reg_frame" style='height:920px;'> <!--124px-->
+
+<div style="margin:0;padding:0;border:0;position:relative;"><span style="width:50px;height:20px;position:absolute;right:10px;top:5px;">
+    <button style="cursor:pointer;width:100%;background:#f0f0f0;border:0;white-space:nowrap;color:black;" onclick="location.replace('../../index.html');return false;">Home </button>
+  </span></div>
+
+<div style="margin:0;padding:0;border:0;height:24px;background:#e0e0e0;text-align:left;vertical-align:bottom;cursor:default;">
+	<span style="line-height:24px;margin-left:10px;color:#6e6e6e;">Current Location ：&nbsp;&nbsp;&nbsp;&nbsp;
+	<label style="color:#6e6e6e;cursor:pointer;text-decoration:underline;" onclick="location.href='../../index.html';return false;">Home</label> 
+	>> <label style="color:#F60">Registration</label>
+	</span>
+</div>
+
+<div id='main_content'></div>
+
+<!-- 主内容 -->
+<div id="main_content_1" style="margin:10px;padding:10px;border:1px solid silver;display:block;left:0;position:absolute;width:95%;">
+  <div style="margin:20px;padding:0;border:0;text-align:left;"><span class="STYLE1">Note: Please try to fill this form up with your real information so we are able to help you better. </span></div>
+
+  <div style="margin:20px;padding:0;border:0;text-align:left;color:#F60;font-weight:bold;border-bottom:2px dotted silver;">
+<img style="width:20px;border:0;padding:0;margin:0;" src="image/bigimg/reg_img_3.png" />&nbsp;&nbsp;Member Registration Information</div>
+
+  <div style="margin:20px;padding:0;border:0;text-align:left;">Please try to  <span style="color:#6e6e6e;font-size:12px;font-weight:bold;">fill an active email address!</span></div>
+
+  <table class="reg_table">
+<tr>
+<th></th>
+<th></th>
+<th width='20px'></th>
+<th width='140px'></th>
+<th width='160px'></th>
+</tr>
+
+<!-- 基本信息 -->
+<tr style='text-align:left;'>
+	<td colspan='5' style='font-weight:bold;line-height:24px;padding-left:32px;border:1px solid silver;background:url(image/images/menu_downarrow.png) 10px center no-repeat #f0f0f0;'>Baisc Information </td>
+</tr>
+
+<tr style="border-bottom:1px dashed silver;">
+	<td class="reg_ltd"><label class="reg_label">	  Username&nbsp;
+	  <label style="color:#F60;font-weight:bold;font-size:18px;">*</label>
+	  &nbsp;:</td>
+	<td><input id="username" class="reg_input" type="text" /></td>
+	<td><span id='tips_username'></span></td>
+	<td><div id='tips_username_2' class="text_tip_grid"></div></td>
+	<td><div>i.e.：IC Cloud </div></td>
+</tr>
+<tr style="">
+	<td class="reg_ltd"><label class="reg_label">&nbsp;</label></td>
+	<td><label class="reg_tips">English Chars Only <br/>
+	    (At least 6 chars, 45 chars at most）</label></td>
+	<td>&nbsp;</td>
+    <td></td>
+    <td></td>
+</tr>
+
+
+
+<!-- 密码部分 -->
+<tr><td style="height:10px;">&nbsp;</td><td>&nbsp;</td></tr>
+<!--
+<tr><td colspan='3' style="padding-right:100px;"><label class="reg_label">为保护您的帐户安全,请选择一个至少8位的密码</label></td></tr>
+-->
+<tr style="border-bottom:1px dashed silver;">
+	<td class="reg_ltd"><label class="reg_label">Password（at lesat 6 chars）&nbsp;
+	  <label style="color:#F60;font-weight:bold;font-size:18px;">*</label>&nbsp;：</label></td>
+	<td><input id="password" class="reg_input" type="password" /></td>
+	<td></td>
+    <td></td>
+	<td><div>i.e.：a1@163#2_3</div></td>
+</tr>
+<tr style="border-bottom:1px dashed silver;">
+	<td class="reg_ltd"><label class="reg_label">Input Again&nbsp;<label style="color:#F60;font-weight:bold;font-size:18px;">*</label>&nbsp;:</label></td>
+	<td><input id="password_2" class="reg_input" type="password" /></td>
+	<td></td>
+    <td></td>
+	<td><div></div></td>
+</tr>
+<tr style="border-bottom:1px dashed silver;">
+	<td class="reg_ltd"><label class="reg_label">Password retrive questions（at least 6 chars）&nbsp;<label style="color:#F60;font-weight:bold;font-size:18px;">*</label>&nbsp;:</label></td>
+	<td style="text-align:left;">
+    <select id='question' title="Password retrieve question" style="width:200px;line-height:20px;margin:0;padding:0;">
+        <option value="web">Name of my second school？</option>
+        <option value="personal">My best pet's name？</option>
+        <option value="personal">My favorite movie？</option>
+        <option value="personal">My favorite song？</option>
+    </select>
+    <!--<input id="question" class="reg_input" type="text" />-->
+    </td>
+	<td></td>
+    <td></td>
+	<td><div>i.e.: My VM is？</div></td>
+</tr>
+<tr style="border-bottom:1px dashed silver;">
+	<td class="reg_ltd"><label class="reg_label">Answer（At least 4 chars）&nbsp;<label style="color:#F60;font-weight:bold;font-size:18px;">*</label>&nbsp;:</label></td>
+	<td><input id="answer" class="reg_input" type="text" /></td>
+	<td></td>
+    <td></td>
+	<td><div>i.e.：IC Cloud</div></td>
+</tr>
+
+
+<tr style="border-bottom:1px dashed silver;">
+	<td class="reg_ltd"><label class="reg_label">Surname&nbsp;<label style="color:#F60;font-weight:bold;font-size:18px;">*</label>&nbsp;</label></td>
+	<td><input id="firstname" class="reg_input" type="text" /></td>
+	<td></td>
+    <td></td>
+	<td><div></div></td>
+</tr>
+
+<tr style="border-bottom:1px dashed silver;">
+	<td class="reg_ltd"><label class="reg_label">Firstname&nbsp;<label style="color:#F60;font-weight:bold;font-size:18px;">*</label>&nbsp;:</label></td>
+	<td><input id="lastname" class="reg_input" type="text" /></td>
+	<td></td>
+    <td></td>
+	<td><div></div></td>
+</tr>
+
+
+
+<tr style="border-bottom:1px dashed silver;">
+	<td class="reg_ltd"><label class="reg_label">Email&nbsp;<label style="color:#F60;font-weight:bold;font-size:18px;">*</label>&nbsp;</label></td>
+	<td><input id="email" class="reg_input" type="text" /></td>
+	<td><span id='tips_email'></span></td>
+	<td><span id='tips_email_t2' class="text_tip_grid"></span></td>
+	<td><div>i.e.：ad@cloud.ic.ac.uk</div></td>
+</tr>
+
+<tr style="border-bottom:1px dashed silver;">
+	<td class="reg_ltd"><label class="reg_label">Confirm your email&nbsp;<label style="color:#F60;font-weight:bold;font-size:18px;">*</label>&nbsp;:</label></td>
+	<td><input id="email_2" class="reg_input" type="text" /></td>
+	<td><span id='tips_email_2'></span></td>
+    <td></td>
+	<td><div></div></td>
+</tr>
+<tr style="border-bottom:1px dashed silver;">
+    <td class="reg_ltd"><label class="reg_label">Mobile No.&nbsp;<label style="color:#F60;font-weight:bold;font-size:18px;">*</label>&nbsp;:</label></td>
+    <td><input id="etc_7" class="reg_input" type="text" /></td>
+    <td></td>
+    <td></td>
+    <td><div>i.e.: 07899343012</div></td>
+</tr>
+
+
+
+
+
+<!-- 其它 -->
+<tr><td style="height:40px;">&nbsp;</td><td>&nbsp;</td></tr>
+
+<tr style='text-align:left;'>
+	<td colspan='5' style='font-weight:bold;line-height:24px;padding-left:32px;border:1px solid silver;background:url(image/images/menu_downarrow.png) 10px center no-repeat #f0f0f0;'>Optional</td>
+</tr>
+<tr style="border-bottom:1px dashed silver;">
+	<td class="reg_ltd"><label class="reg_label">Address:</label></td>
+	<td><input id="etc_1" class="reg_input" type="text" /></td>
+	<td></td>
+	<td></td>
+	<td><div></div></td>
+</tr>
+<tr style="border-bottom:1px dashed silver;">
+<td class="reg_ltd"><label class="reg_label">City:</label></td>
+<td><input id="etc_2" class="reg_input" type="text" /></td>
+<td></td>
+<td></td>
+<td><div></div></td>
+</tr>
+<tr style="border-bottom:1px dashed silver;"><td class="reg_ltd"><label class="reg_label">State:</label></td>
+<td><input id="etc_3" class="reg_input" type="text" /></td>
+<td></td>
+<td></td>
+<td><div></div></td>
+</tr>
+<!--
+<tr><td class="reg_ltd"><label class="reg_label">国家 ＊:</label></td><td><input id="etc_4" class="reg_input" type="text" /></td><td></td></tr>-->
+<tr style="border-bottom:1px dashed silver;"><td class="reg_ltd"><label class="reg_label">Postcode:</label></td>
+<td><input id="etc_5" class="reg_input" type="text" /></td>
+<td></td>
+<td></td>
+<td><div></div></td>
+</tr>
+<!--
+<tr><td class="reg_ltd"><label class="reg_label">电话 ＊:</label></td><td><input id="etc_6" class="reg_input" type="text" /></td><td></td></tr>-->
+<tr style="border-bottom:1px dashed silver;">
+<td class="reg_ltd"><label class="reg_label">QQ No.:</label></td>
+<td><input id="etc_8" class="reg_input" type="text" /></td>
+<td></td>
+<td></td>
+<td><div></div></td>
+</tr>
+<tr style="border-bottom:1px dashed silver;">
+<td class="reg_ltd"><label class="reg_label">MSN：</label></td>
+<td><input id="etc_9" class="reg_input" type="text" /></td>
+<td></td>
+<td></td>
+<td><div></div></td>
+</tr>
+
+<tr style="border-bottom:1px dashed silver;">
+<td class="reg_ltd"><label class="reg_label">Verification Code&nbsp;<label style="color:#F60;font-weight:bold;font-size:18px;">*</label>&nbsp;:</label></label></td>
+<td><input maxlength="4" id="verifycode" class="reg_input" type="text" /></td>
+<td>&nbsp;&nbsp;&nbsp;&nbsp;<img id='verifyimg' style="width:80px;height:30px;margin:0;padding:0;border:0;border-collapse:collapse;vertical-align:middle;cursor:pointer;" title="Click to Change" /></td>
+<td><div style="line-height:28px;">（Click to Change）</div></td>
+<td><div></div></td>
+</tr>
+
+<tr><td colspan="3">
+<div style="margin:10px;padding:0;border:0;text-align:center;">
+	<span style="color:#6e6e6e;font-size:12px;font-weight:bold;"><label style="color:#F60;font-weight:bold;font-size:18px;">*</label>&nbsp; is compulsory</span>
+</div>
+</td></tr>
+
+<tr>
+	<td colspan="5">
+		<div style="text-align:center;">
+			<input type="checkbox" name="etc_10" id="etc_10" />
+			<label for="etc_10" style="font-weight:bold;line-height:48px;font-size:14px;"><i>I have read, understood and accept <a href="#">the terms and conditions for ViaCloud registration</a>. </i></label>
+		</div>
+	</td>
+</tr>
+
+<tr>
+	<td colspan="5" style="text-align:center;"><a id="regBtn" style="margin-top:15px;display:inline-block;background:url(image/bigimg/reg_img_4.en_GB.png);width:165px;height:32px;cursor:pointer;" >&nbsp;</a></td>
+</tr>
+</table>
+
+
+</div>
+
+
+
+
+
+
+<!-- 主Content2 -->
+<div id="main_content_2" style="margin:10px;padding:10px;border:1px solid silver;display:none;left:0;position:absolute;width:95%;">
+
+<div style="margin:20px;padding:0;border:0;text-align:left;color:#F60;font-weight:bold;border-bottom:2px dotted silver;">
+<img style="width:20px;border:0;padding:0;margin:0;" src="image/bigimg/reg_img_3.png" />&nbsp;&nbsp;Please confirm your registration infor.
+</div>
+
+<table class="reg_table">
+<tr><th width='200px;'></th><th></th><th width='20px'></th><th width='140px'></th></tr>
+
+
+
+<!-- 基本信息 -->
+<tr style='text-align:left;'>
+	<td colspan='4' style='font-weight:bold;line-height:24px;padding-left:32px;border:1px solid silver;background:url(image/images/menu_downarrow.png) 10px center no-repeat #f0f0f0;'>Base Information</td>
+</tr>
+<tr style='border-bottom:1px dashed silver;'>
+	<td class="reg_ltd"><label class="reg_label">Username&nbsp;<label style="color:#F60;font-weight:bold;font-size:18px;">*</label>&nbsp;:</label></td>
+	<td class='reg_rtd'><label id="c_username"></label></td><td>&nbsp;</td><td>&nbsp;</td>
+</tr>
+
+<!-- 密码部分 -->
+<tr><td style="height:10px;">&nbsp;</td><td>&nbsp;</td></tr>
+<!--
+<tr><td colspan='3' style="padding-right:100px;"><label class="reg_label">为保护您的帐户安全,请选择一个至少8位的密码</label></td></tr>
+-->
+<tr style='border-bottom:1px dashed silver;'>
+	<td class="reg_ltd"><label class="reg_label">Password retrieve question&nbsp;<label style="color:#F60;font-weight:bold;font-size:18px;">*</label>&nbsp;:</label></td>
+	<td class='reg_rtd'><label id="c_question"></label></td><td>&nbsp;</td><td>&nbsp;</td>
+</tr>
+<tr style='border-bottom:1px dashed silver;'>
+	<td class="reg_ltd"><label class="reg_label">Answer&nbsp;<label style="color:#F60;font-weight:bold;font-size:18px;">*</label>&nbsp;:</label></td>
+	<td class='reg_rtd'><label id="c_answer"></label></td><td>&nbsp;</td><td>&nbsp;</td>
+</tr>
+
+
+<tr style='border-bottom:1px dashed silver;'>
+	<td class="reg_ltd"><label class="reg_label">Surname&nbsp;<label style="color:#F60;font-weight:bold;font-size:18px;">*</label>&nbsp;:</label></td>
+	<td class='reg_rtd'><label id="c_firstname"></label></td><td>&nbsp;</td><td>&nbsp;</td>
+</tr>
+
+<tr style='border-bottom:1px dashed silver;'>
+	<td class="reg_ltd"><label class="reg_label">Firstname&nbsp;<label style="color:#F60;font-weight:bold;font-size:18px;">*</label>&nbsp;:</label></td>
+	<td class='reg_rtd'><label id="c_lastname"></label></td><td>&nbsp;</td><td>&nbsp;</td>
+</tr>
+
+
+
+<tr style='border-bottom:1px dashed silver;'>
+	<td class="reg_ltd"><label class="reg_label">Email&nbsp;<label style="color:#F60;font-weight:bold;font-size:18px;">*</label>&nbsp;:</label></td>
+	<td class='reg_rtd'><label id="c_email"></label></td><td>&nbsp;</td><td>&nbsp;</td>
+</tr>
+
+<tr style='border-bottom:1px dashed silver;'>
+	<td class="reg_ltd"><label class="reg_label">Mobile No.&nbsp;<label style="color:#F60;font-weight:bold;font-size:18px;">*</label>&nbsp;</label></td>
+	<td class='reg_rtd'><label id="c_mobile"></label></td><td>&nbsp;</td><td>&nbsp;</td>
+</tr>
+
+
+
+
+
+<!-- 其它 -->
+<tr><td style="height:40px;">&nbsp;</td><td>&nbsp;</td></tr>
+<tr style='text-align:left;'>
+	<td colspan='4' style='font-weight:bold;line-height:24px;padding-left:32px;border:1px solid silver;background:url(image/images/menu_downarrow.png) 10px center no-repeat #f0f0f0;'>Optional</td>
+</tr>
+<tr style='border-bottom:1px dashed silver;'>
+	<td class="reg_ltd"><label class="reg_label">Address:</label></td>
+	<td class='reg_rtd'><label id="c_etc_1"></label></td>
+	<td>&nbsp;</td><td>&nbsp;</td>
+</tr>
+<tr style='border-bottom:1px dashed silver;'>
+	<td class="reg_ltd"><label class="reg_label">City:</label></td>
+	<td class='reg_rtd'><label id="c_etc_2"></label></td>
+	<td>&nbsp;</td><td>&nbsp;</td>
+</tr>
+<tr style='border-bottom:1px dashed silver;'>
+	<td class="reg_ltd"><label class="reg_label">State:</label></td>
+	<td class='reg_rtd'><label id="c_etc_3"></label></td>
+	<td>&nbsp;</td><td>&nbsp;</td>
+</tr>
+<!--
+<tr style='border-bottom:1px dashed silver;'><td class="reg_ltd"><label class="reg_label">国家 ＊:</label></td><td><input id="etc_4" class="reg_input" type="text" /></td><td></td></tr>-->
+<tr style='border-bottom:1px dashed silver;'>
+	<td class="reg_ltd"><label class="reg_label">Postcode:</label></td>
+	<td class='reg_rtd'><label id="c_etc_5"></label></td>
+	<td>&nbsp;</td><td>&nbsp;</td>
+</tr>
+<!--
+<tr style='border-bottom:1px dashed silver;'><td class="reg_ltd"><label class="reg_label">电话 ＊:</label></td><td><input id="etc_6" class="reg_input" type="text" /></td><td></td></tr>-->
+<tr style='border-bottom:1px dashed silver;'>
+	<td class="reg_ltd"><label class="reg_label">QQ No.:</label></td>
+	<td class='reg_rtd'><label id="c_etc_8"></label></td>
+	<td>&nbsp;</td><td>&nbsp;</td>
+</tr>
+<tr style='border-bottom:1px dashed silver;'>
+	<td class="reg_ltd"><label class="reg_label">MSN：</label></td>
+	<td class='reg_rtd'><label id="c_etc_9"></label></td>
+	<td>&nbsp;</td><td>&nbsp;</td>
+</tr>
+
+
+
+
+<tr>
+	<td class="reg_ltd">&nbsp;</td>
+	<td style='height:48px;vertical-align:bottom;'><a id="subBtn" value="Submit" style="float:left;background:url(image/bigimg/but02.en_GB.png);width:165px;height:32px;cursor:pointer;" >&nbsp;</a>&nbsp;&nbsp;</td>
+	<td style='height:48px;vertical-align:bottom;'><a id="retBtn" value="Go Back" style="float:left;background:url(image/bigimg/but01.en_GB.png);width:88px;height:32px;cursor:pointer;" >&nbsp;</a></td>
+	<td>&nbsp;</td>
+</tr>
+</table>
+
+
+
+
+</div>
+
+
+
+<!-- 主Content3 -->
+<div id="main_content_3" style="margin:10px;padding:10px;border:1px solid silver;display:none;left:0;position:absolute;width:95%;">
+
+
+<div style="margin:20px;padding:0;border:0;text-align:left;color:#F60;font-weight:bold;border-bottom:2px dotted silver;">
+<img style="width:20px;border:0;padding:0;margin:0;" src="image/bigimg/reg_img_3.png" />&nbsp;&nbsp;Registration Completed.
+</div>
+
+
+<div style="margin:20px;padding:0;border:0;text-align:left;font-weight:bold;border-bottom:1px dotted silver;line-height:40px;">
+<img src='image/icons/ok.png' />
+<label style="color:#0C0;font-size:16px;line-height:40px;">Congradulations!<u><label style="color:#F30" id='p3_username'>&nbsp;</label></u>，Your registration has been completed！</label><br/>
+Confirmation email has been sent to your registered email address.<label style="color:#F30" id='p3_email'>&nbsp;</label>, please check your spam folder if your don't see it.<br/>
+or your can try to fill the verification code to&nbsp;<input id="resendcode" maxlength="4" type="text" size='4' />
+&nbsp;&nbsp;<img id='resendimg' style="width:80px;height:30px;margin:0;padding:0;border:0;border-collapse:collapse;vertical-align:middle;cursor:pointer;" title="Click to Change" />
+<label style='font-weight:normal;'>（Click to Change）</label>
+, and &nbsp;[<label title='resent this confirmation email' style='color:orange;text-decoration:underline;cursor:pointer;' onclick='resend();'>Resent Confirmation Email</label>]
+<br/>
+
+</div>
+
+
+
+<div style="margin:20px;padding:0;border:0;text-align:center;">
+<!--<a id="closeBtn" value="提交注册申请" style="float:left;background:url(image/bigimg/but02.png);width:165px;height:32px;cursor:pointer;" >&nbsp;</a>-->
+<a href="#" onclick="location.replace('../../index.htm');return false;">Home</a>
+</div>
+
+</div> <!--content 3-->
+
+</div> <!-- main frame -->
+
+
+<!-- check-dialog -->
+
+<div style='display:none;' id="checkDialog" title="Note">
+	<p><img src='image/bigimg/alert.png' style='width:60px;vertical-align:top;'/>
+	<label id="tips" style="line-height:40px;vertical-align:bottom;font-size:18px;font-weight:bold;">&nbsp;</label></p>
+</div>
+
+<div style="display:none;" id="successDialog" title="Note">
+	<p><label>Registration Completed</label></p>
+</div>
+
+<div style='display:none;' id="okDialog" title="Note">
+	<p><img src='image/bigimg/ok.png' style='width:60px;vertical-align:top;'/>
+	<label id="ok_tips" style="line-height:40px;vertical-align:bottom;font-size:18px;font-weight:bold;">&nbsp;</label></p>
+</div>
+
+<!-- 协议内容 -->
+<div style="display:none;" id='protocolContent'>
+	<div class='ui-state-highlight ui-corner-all'><span><textarea readonly id="agreeTxt" style='background-color:#f0f0ff;width:100%;height:340px;padding-bottom:5px;cursor:default;margin-bottom:5px;border:0;'></textarea></span></div><br/>
+	<input type="button" id="closeProtocol" value="Close" /> 	
+</div>
+
+
+
+</body>
+</html>

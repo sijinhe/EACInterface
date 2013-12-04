@@ -1,0 +1,1584 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html dir="ltr" xml:lang="en-gb" xmlns="http://www.w3.org/1999/xhtml" lang="en-gb">
+<head>
+
+<meta http-equiv="Last-Modified" content="Sat, 27 Aug 2011 02:28:12 GMT">
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title></title>
+
+<link type="text/css" href="css/smoothness/jquery-ui-1.8.8.custom.css" rel="stylesheet" />
+
+
+<link rel="stylesheet" href="image/template.css" type="text/css">
+<link rel="stylesheet" href="image/constant.css" type="text/css">
+<link rel="stylesheet" href="image/imagegallery.css" type="text/css">
+<link rel="stylesheet" href="image/ui.jqgrid.css" type="text/css"/>
+<link rel="stylesheet" href="image/content.css" type="text/css"/>
+<link rel="stylesheet" href="image/prettyCheckboxes.css" type="text/css"/>
+<link rel="stylesheet" href="image/custom.css" type="text/css"/>
+
+
+<script type="text/javascript" src="js/jquery.js"></script>
+<script type="text/javascript" src="js/jquery-ui-1.8.8.custom.min.js"></script>
+<script type="text/javascript" src="../../locale.jsp"></script>
+<script type="text/javascript" src="js/check.js"></script>
+<script type="text/javascript" src="js/jquery.blockUI.js"></script>
+<script src="../../js/String.js" language="javascript"></script>
+<script type="text/javascript" src="../../js/base64.js"></script>
+<script type="text/javascript" src="../../js/server.js"></script>
+<script type="text/javascript" src="../../js/jquery.cookie.js"></script>
+<script type="text/javascript" src="../../js/account.js"></script>
+<script type="text/javascript" src="../../js/server.js"></script>
+<script type="text/javascript" src="js/xml.parser.js"></script>
+<script type="text/javascript" src="js/util.js"></script>
+<script type="text/javascript" src="js/grid.locale-cn.js"></script>
+<script type="text/javascript" src="js/jquery.jqGrid.min.js"></script>
+<script type="text/javascript" src="js/jquery.watermarkinput.js"></script>
+<script type="text/javascript" src="js/prettyCheckboxes.js"></script>
+<script type="text/javascript" src="js/common.js"></script>
+
+<!--<script type="text/javascript" src="image/jquery.jNice.js"></script>-->
+
+<!--<link href="image/base.css" rel="stylesheet" type="text/css" />-->
+<!--<link href="image/jNice.css" rel="stylesheet" type="text/css" />-->
+<style>
+th,td{vertical-align:middle;}
+*{
+	font-family:"微软雅黑";
+}
+</style>
+
+<script>
+// 本页的全局变量
+var g_SoftwareId='';
+var g_SoftwareName='';
+var g_PaymentAmount='';
+
+var g_maxCPU='';
+var g_CPU='';
+var g_maxMemory='';
+var g_memory='';
+var g_SoftwareResourceID='';
+
+var g_PlanResourceId='';
+var g_Planname='';
+var g_SubscriptionFee='';
+var g_CpuPrice='';
+var g_MemPrice='';
+var g_DownloadPrice='';
+var g_UploadPrice='';
+var g_ioWritePrice='';
+var g_ioReadPrice='';
+var g_instanceName='';
+var g_provider='';
+var g_dataCenter='';
+var g_dataCenterName='';
+
+var g_userType='';
+var g_needIp='';
+
+var g_needVolume='';
+var g_volumeName='';
+var g_hdSize='';
+
+var g_ipPrice='';
+var g_volumePrice='';
+
+var g_orderAmount="1";
+
+var LOWEST_PAYMENT='50';
+
+$(document).ajaxStart($.blockUI).ajaxStop($.unblockUI);
+
+// load 数据中心
+function loadDataCenter() {	
+	$.post(Server+"/RedDragonEnterprise/InformationRetriverServlet", 
+		{
+			methodType: 'GETZONEINFOR'
+		}, 
+		function(data) {
+			var obj=$.createXml(data);					
+			var tmp=$(obj).find('datacentres').find('datacentre').find('mydatacentre');
+			
+			for(i=0; i<tmp.length; i++) {
+				//alert($(tmp[i]).attr('lable'));
+				$('#dataCenter').append('<option value="'+$(tmp[i]).attr('data')+'|'
+					+$(tmp[i]).attr('provider')+'|'+$(tmp[i]).attr('lable')+'">'+$(tmp[i]).attr('lable')+'</option>');
+			}				
+		}
+	);
+}
+
+// load ip价格
+function loadIpPrices(where, prov) {	
+	$.post(Server+"/billingCN/BillingServlet", 
+		{
+			RequestType: 'getResourcePricesByZone',
+			resourceType: 'IP',
+			zone:where
+		}, 
+		function(data) {
+			var obj=$.createXml('<data>'+data+"</data>");
+			var tmp=$(obj).find('resource');
+			
+			//alert($(tmp).attr('price'));
+			g_ipPrice=$(tmp).attr('price');
+			if(prov.toLowerCase()=='both') {
+        		g_ipPrice=parseFloat(g_ipPrice)*2;
+			}
+			g_ipPrice=parseFloat(g_ipPrice).toFixed(2);
+						
+			var unit_price=parseFloat($(tmp).attr('price')).toFixed(2);
+			var price_string="";
+			
+			if(prov.toLowerCase()=='both'){
+		        price_string=Locale["inst.page.label.ip.price.string.1"].sprintf(g_ipPrice);
+			}else{
+        		price_string=Locale["inst.page.label.ip.price.string.2"].sprintf(g_ipPrice);
+			}
+	    	$('#iptips').html('<label style="line-height:32px;font-size:12px;">'+
+				'<label style=" font-weight:bold;">'+Locale["inst.page.label.ip.tips"]+'</label><br/>'+
+				Locale["inst.page.label.ip.notice"].sprintf(unit_price, price_string)+
+				'</label>');
+				
+		}
+	);
+}
+
+// load 磁盘价格
+function loadVolumePrices(where) {
+	$.post(Server+"/billingCN/BillingServlet", 
+		{
+			RequestType: 'getResourcePricesByZone',
+			resourceType: 'volume',
+			zone:where
+		}, 
+		function(data) {
+			var obj=$.createXml('<data>'+data+"</data>");
+			var tmp=$(obj).find('resource');
+			
+			//alert($(tmp).attr('price'));
+			g_volumePrice=$(tmp).attr('price');
+			
+			$('#volumetips').html(Locale["inst.page.label.volume.price"].sprintf(g_volumePrice));
+		}
+	);
+}
+
+
+// load镜像产品列表
+function loadSoftware() {
+	//return;
+
+	// 发送查询请求
+	$.post(Server+"/billingCN/BillingServlet", 
+		{
+			RequestType: 'getSoftware',
+			type: 'All',
+			SearchName: ''
+		}, 
+		function(data) {
+			data='<root>'+data+'</root>';
+			//alert(data);			
+			updateTable(data, '#dataTable_1');
+		}
+	);	
+}
+
+// load硬件配置
+function loadHardware(where) {
+	// 发送查询请求
+	$.post(Server+"/billingCN/BillingServlet", 
+		{
+			RequestType: 'getSoftwareResourcesConfigs',
+			SoftwareID: g_SoftwareId,
+			zone: where
+		}, 
+		function(data) {
+			data='<root>'+data+'</root>';
+			//alert(data);
+			updateTable(data, '#dataTable_2');
+		}
+	);
+}
+
+function loadPlan(where) {
+	// 发送查询请求
+	$.post(Server+"/billingCN/BillingServlet", 
+		{
+			RequestType: 'getSoftwareResourcesVmplansOnConfig',
+			SoftwareID: g_SoftwareId,
+			resourceID: g_SoftwareResourceID,
+			zone: where
+		}, 
+		function(data) {
+			data='<root>'+data+'</root>';
+			//alert(data);
+			updateTable(data, '#dataTable_3');
+		}
+	);
+}
+
+function createInfo(where, name, val, id) {
+	//$('info_form').append('<tr><td><div style="border-bottom:1px silver dotted">'+name+' : </div></td><td><div>'+val+'</div></td></tr>');
+	$(where).append('<div style="height:28px;font-size:13px;border-bottom:1px silver dotted;white-space:nowrap;background:none;">'
+		+'<span style="display:inline-block;width:280px;text-align:right;margin-top:12px;">'
+		+name+'&nbsp;:&nbsp;&nbsp;</span><span style="color:#4a4aa0;text-align:left;display:inline-block;" '+(id!=null?'id="'+id+'"':"")+'>'
+		+val+'</span></div>');
+}
+function createSelectAmount(where, id, name) {
+	$(where).append('<div style="height:28px;line-height:28px;font-size:14px;border-bottom:1px silver dotted;white-space:nowrap;background:none;"><span style="display:table-cell;width:280px;text-align:right;">'+name+'&nbsp;:&nbsp;&nbsp;</span><span style="color:#4a4aa0;text-align:left;display:table-cell;">'+
+	'<select style="padding:0;margin:0;" id="'+id+'"><option value="1" selected>1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option>'+
+	'</select></span></div>');
+}
+
+function showInfo() {
+	//createInfo('g_SoftwareId', g_SoftwareId);
+	$('#info_form_0').empty();
+	$('#info_form_1').empty();
+	$('#info_form_2').empty();
+	$('#info_form_3').empty();
+	$('#info_form_4').empty();
+	$('#info_form_5').empty();
+	
+	
+	$('#info_form_0').append('<div style="border:1px solid silver;background:url(image/images/menu_downarrow.png) 10px center no-repeat #f0f0f0;padding:5px 5px 5px 25px;font-size:14px;font-weight:bold;color:#808080;">'+Locale["inst.page.info.software"]+'</div>');
+	createInfo('#info_form_0', Locale["inst.page.info.software.name"], g_SoftwareName);
+	//createInfo('#info_form_0', '价格', g_PaymentAmount);
+	
+	//createInfo('价格', g_PaymentAmount);
+	//$('#info_form').append('<div style="display:inline-block;border:1px orange solid;">');
+	$('#info_form_1').append('<div style="border:1px solid silver;background:url(image/images/menu_downarrow.png) 10px center no-repeat #f0f0f0;padding:5px 5px 5px 25px;font-size:14px;font-weight:bold;color:#808080;">'+Locale["inst.page.info.hardware"]+'</div>');
+	createInfo('#info_form_1', Locale["inst.page.info.cpu"], g_CPU);
+	createInfo('#info_form_1', Locale["inst.page.info.cpu.max"], g_maxCPU);
+	createInfo('#info_form_1', Locale["inst.page.info.mem"], g_memory+' MB');	
+	createInfo('#info_form_1', Locale["inst.page.info.mem.max"], g_maxMemory+' MB');
+	
+	//$('#info_form').append('</div>');
+	
+	//createInfo('g_PlanResourceId', g_PlanResourceId);
+	$('#info_form_2').append('<div style="border:1px solid silver;background:url(image/images/menu_downarrow.png) 10px center no-repeat #f0f0f0;padding:5px 5px 5px 25px;font-size:14px;font-weight:bold;color:#808080;">'+Locale["inst.page.info.plan_and_datacenter"]+'</div>');
+	createInfo('#info_form_2', Locale["inst.page.info.plan.name"], g_Planname);
+	
+	var ext_str='';
+	if(g_SubscriptionFee=='-') {
+		createInfo('#info_form_2', Locale["inst.page.info.cpu.price"], Locale["inst.page.info.cpu.price.format"].sprintf(g_CpuPrice));
+		createInfo('#info_form_2', Locale["inst.page.info.mem.price"], Locale["inst.page.info.mem.price.format"].sprintf(g_MemPrice));
+		createInfo('#info_form_2', Locale["inst.page.info.net.price"], Locale["inst.page.info.net.price.format"].sprintf(g_DownloadPrice));
+		//createInfo('#info_form_2', '上传价格每GB', g_UploadPrice);
+		//createInfo('#info_form_2', 'IO写价格每1000次', g_ioWritePrice);
+		//createInfo('#info_form_2', 'IO读价格每1000次', g_ioReadPrice);
+		ext_str='';//（首次充值额度：100元）
+	}else {
+		createInfo('#info_form_2', Locale["inst.page.info.monthly.fee"], Locale["inst.page.info.monthly.fee.format"].sprintf(g_SubscriptionFee));
+	}
+	createInfo('#info_form_2', Locale["inst.page.info.host.name"], g_instanceName);
+	//createInfo('#info_form_2', '提供商', g_dataCenter=='caohejing'?'联通':g_dataCenter=='waigaoqiao'?'电信':'未知');//g_provider
+	createInfo('#info_form_2', Locale["inst.page.info.datacenter"], g_dataCenterName);
+
+	$('#info_form_3').append('<div style="border:1px solid silver;background:url(image/images/menu_downarrow.png) 10px center no-repeat #f0f0f0;padding:5px 5px 5px 25px;font-size:14px;font-weight:bold;color:#808080;">'+Locale["inst.page.info.network"]+'</div>');
+	
+	createInfo('#info_form_3', Locale["inst.page.info.need.ip"], g_needIp?Locale["inst.page.info.need.ip.yes"]:Locale["inst.page.info.need.ip.no"]);
+	if(g_needIp) {
+		createInfo('#info_form_3', Locale["inst.page.info.need.ip.type"], g_userType=='personal'?Locale["inst.page.info.need.ip.type.personal"]:Locale["inst.page.info.need.ip.type.web"]);
+		//createInfo('#info_form_3', 'IP价格', g_ipPrice+' 元 每个每月');
+	}
+	
+	$('#info_form_4').append('<div style="border:1px solid silver;background:url(image/images/menu_downarrow.png) 10px center no-repeat #f0f0f0;padding:5px 5px 5px 25px;font-size:14px;font-weight:bold;color:#808080;">'+Locale["inst.page.info.volume"]+'</div>');	
+	createInfo('#info_form_4', Locale["inst.page.info.need.volume"], g_needVolume?Locale["inst.page.info.need.volume.yes"]:Locale["inst.page.info.need.volume.no"]);
+	if(g_needVolume) {
+		createInfo('#info_form_4', Locale["inst.page.info.volume.name"], g_volumeName);
+		createInfo('#info_form_4', Locale["inst.page.info.volume.size"], g_hdSize+' GB');
+		//createInfo('#info_form_4', '扩展磁盘价格', g_volumePrice+' 每GB每天');
+	}
+	
+	$('#info_form_5').append('<div style="border:1px solid silver;background:url(image/images/menu_downarrow.png) 10px center no-repeat #f0f0f0;padding:5px 5px 5px 25px;font-weight:bold;color:#808080;">'+Locale["inst.page.info.summary"]+'</div>');					
+	createInfo('#info_form_5', Locale["inst.page.info.summary.vm"], Locale["inst.page.info.summary.vm.format"].sprintf(parseFloat(g_PaymentAmount).toFixed(2)));
+	createInfo('#info_form_5', Locale["inst.page.info.summary.volume"]+(!g_needVolume?'':'（'+g_hdSize+' GB）'), !g_needVolume?Locale["inst.page.info.summary.volume.none"]:Locale["inst.page.info.summary.volume.format"].sprintf((parseFloat(g_volumePrice)*parseFloat(g_hdSize)).toFixed(2)));
+	createInfo('#info_form_5', Locale["inst.page.info.summary.network"], !g_needIp?Locale["inst.page.info.summary.network.none"]:Locale["inst.page.info.summary.network.format"].sprintf(parseFloat(g_ipPrice).toFixed(2)));
+	
+	createSelectAmount('#info_form_5', 'orderamount', Locale["inst.page.info.order.amount"]);
+			
+  $('#orderamount').bind('change', function() {
+    $('#totalField').html(((parseFloat(g_PaymentAmount)
+      +parseFloat(g_needVolume?g_volumePrice:'0')*parseFloat(g_hdSize)
+      +parseFloat(g_needIp?g_ipPrice:'0'))*parseFloat($('#orderamount').val())).toFixed(2)+' '+Locale["inst.page.info.summary.currency.unit"]+ext_str);
+  });
+	
+	createInfo('#info_form_5', Locale["inst.page.info.summary.total"], ((parseFloat(g_PaymentAmount)
+		+parseFloat(g_needVolume?g_volumePrice:'0')*parseFloat(g_hdSize)
+		+parseFloat(g_needIp?g_ipPrice:'0'))*parseFloat($('#orderamount').val())).toFixed(2)+' '+Locale["inst.page.info.summary.currency.unit"]+ext_str, 'totalField');
+	
+}
+
+function saveTemplate() {
+	$.post(Server+"/RedDragonEnterprise/orderManagement", 
+		{
+			operation: 'saveTemplate',
+			login: getUsername(),
+			needVolume: g_needVolume+'',
+			needIP: g_needIp+'',
+			softwareResourceId: g_PlanResourceId,
+			zone: g_dataCenter,
+			volumeSize: g_needVolume?g_hdSize:0,
+			ipType: g_needIp?g_userType:0,
+			ipProvider: g_provider
+		}, 
+		function(data) {
+			var tmp=$.createXml(data);
+			
+			//alert(data);
+			userStatusCheck(tmp); // 登陆状态监测
+			
+			switch($(tmp).find('result').text().toLowerCase()) {
+			case 'true':
+				$('#ok_tips').html(Locale["inst.page.message.save.success"]);
+				$('#okDialog').dialog('open');
+				break;
+			case 'false':
+				$('#err_tips').html(Locale["inst.page.message.save.failure"]);
+				$('#errDialog').dialog('open');
+				break;
+			}
+		}
+	);
+}
+
+function submitTemplate() {
+	
+	/*alert(paras['username']+','+g_dataCenter+','+g_SoftwareId+','+g_PlanResourceId+','+g_PaymentAmount+','+g_maxCPU+','
+		+g_CPU+','+parseInt(g_maxMemory)*1024+','+parseInt(g_memory)*1024+','+g_instanceName+','+g_needIp+','+g_userType+','+g_provider+','+g_needVolume+','+g_hdSize+','+g_volumeName);
+	*/
+	$.post(
+		Server+"/billingCN/BillingServlet",
+		{
+			RequestType: 'getUserInfo',
+			Password: getPassword(),
+			LoginUsername: getUsername()
+		},
+		function(data) {
+			var obj=$.createXml('<data>'+data+'</data>');
+			
+			userStatusCheck(obj);
+			
+			if($(obj).find('status').text().toLowerCase()=='valid') {
+				var tmp=$(obj).find('Balance').text();
+				var balVal=parseFloat(tmp).toFixed(2);
+				
+				if(parseInt(parseFloat(balVal)*parseFloat(LOWEST_PAYMENT))>=parseInt(parseFloat(g_PaymentAmount)*parseFloat(LOWEST_PAYMENT))) {
+					$.post(
+						Server+"/RedDragonEnterprise/InstanceCtrlServlet",
+						{			
+							methodType: 'GreenPath',
+							loginUser: getUsername(),
+							Password: getPassword(),
+							zone: g_dataCenter,
+							SoftwareId: g_SoftwareId,
+							SoftwareResourceID: g_PlanResourceId,
+							PaymentAmount: g_PaymentAmount,
+							
+							maxCPU: g_maxCPU,
+							cpu: g_CPU,
+							maxMemo: parseInt(g_maxMemory),
+							memo: parseInt(g_memory),
+							instanceName: g_instanceName,
+							
+							doIP: g_needIp+'',
+							userType: g_userType,
+							provider: g_provider,
+							
+							doVolume: g_needVolume+'',
+							hdSize: g_hdSize,
+							volumeName: g_volumeName,
+							
+							orderamount: g_orderAmount
+						},
+						function(data) {
+				      		var result=$.createXml(data);
+							userStatusCheck(result); // 登陆状态监测
+							
+							//alert(data);
+							
+							var isok=true;
+							
+							var orderId=$(result).find('getOrderID').text();
+							var instanceResult=$(result).find('instanceResult').text();
+							var ipAddressResult=$(result).find('ipAddressResult').text();
+							var volumeResult=$(result).find('volumeResult').text();
+                  
+							var infostr=Locale["inst.page.message.buy.prefix"];
+							switch(orderId.toUpperCase()) {
+				                case 'NO_ENOUGH_STOCK':
+				                  isok=false;
+				                  infostr+=Locale["inst.page.message.buy.NO_ENOUGH_STOCK"]+'<br/>';
+				                  break;
+								case 'NOIDORDER':
+									isok=false;
+									infostr+=Locale["inst.page.message.buy.NOIDORDER"]+'<br/>';
+								case 'ERROR':
+									isok=false;
+									infostr+=Locale["inst.page.message.buy.ERROR"]+'<br/>';
+								case 'EXCEPTION':
+									isok=false;
+									infostr+=Locale["inst.page.message.buy.EXCEPTION"]+'<br/>';
+									break;
+								case 'LOWBALANCE':
+									isok=false;
+									infostr+=Locale["inst.page.message.buy.LOWBALANCE"]+'<br/>';
+									break;
+								default : {
+								}
+							}
+							
+							if(isok){
+								infostr=Locale["inst.page.message.buy.prefix.inst"];
+								switch(instanceResult.toUpperCase()) {
+				                  	case 'NO_ENOUGH_STOCK':
+					                    isok=false;
+					                    infostr+=Locale["inst.page.message.buy.inst.NO_ENOUGH_STOCK"]+'<br/>';
+					                    break;
+									case 'FAILED':
+									case 'ERROR':
+									case 'EXCEPTION':
+										isok=false;
+										infostr+=Locale["inst.page.message.buy.inst.EXCEPTION"]+'<br/>';
+										break;
+									case 'NAMENOTAVAILABLE':
+										isok=false;
+										infostr+=Locale["inst.page.message.buy.inst.NAMENOTAVAILABLE"]+'<br/>';
+										break;
+									case 'OSTYPEERROR':
+										isok=false;
+										infostr+=Locale["inst.page.message.buy.inst.OSTYPEERROR"]+'<br/>';
+										break;
+									case 'CREATED':
+										infostr+=Locale["inst.page.message.buy.inst.CREATED"].sprintf("<font style='color:red;'>"+Locale["inst.page.message.buy.inst.CREATED.keyword"]+"</font>")+'<br/>';
+										break;
+									case 'LOWBALANCE':
+										isok=false;
+										infostr+=Locale["inst.page.message.buy.inst.LOWBALANCE"]+'<br/>';
+										break;
+									case 'ONEVMONLY':
+										isok=false;
+										infostr+=Locale["inst.page.message.buy.inst.ONEVMONLY"]+'<br/>';
+										break;
+									default:{
+					                    if(instanceResult.indexOf("{")==0) {
+					                      var rets=$.parseJSON(instanceResult);
+					                      infostr+=Locale["inst.page.message.buy.inst.DONE"].sprintf(rets["success"], rets["failure"]);
+					                    }else{									
+					                      isok=false;
+					                      infostr+=Locale["inst.page.message.buy.inst.UNKNOWN_ERROR"]+'<br/>';
+					                    }
+									}
+								}
+							
+                switch(ipAddressResult.toUpperCase()) {
+                  case 'NO_ENOUGH_STOCK':
+                    isok=false;
+                    infostr+=Locale["inst.page.message.buy.ip.NO_ENOUGH_STOCK"]+'<br/>';
+                    break;
+                  case 'FAILED':
+                  case 'ERROR':
+                  case 'EXCEPTION':
+                    isok=false;
+                    infostr+=Locale["inst.page.message.buy.ip.EXCEPTION"]+'<br/>';
+                    break;
+                  case 'NOIP':
+                    isok=false;
+                    infostr+=Locale["inst.page.message.buy.ip.NOIP"]+'<br/>';
+                    break;
+                  case 'WEB':
+                    infostr+=Locale["inst.page.message.buy.ip.WEB"]+'<br/>';
+                    break;
+                  case 'LOWBALANCE':
+                    isok=false;
+                    infostr+=Locale["inst.page.message.buy.ip.LOWBALANCE"]+'<br/>';
+                    break;
+                  case 'SUCCESSFUL':
+                  case 'PERSONAL':
+                    infostr+=Locale["inst.page.message.buy.ip.PERSONAL"].sprintf("<span style='color:red;vertical-align:vertical-align:bottom;font-family:微软雅黑;'>"+Locale["inst.page.message.buy.ip.PERSONAL.keyword"]+"</span>")+'<br/>';
+                    break;
+                  case 'NO_IP':
+                  case 'NOTBUY':
+                    break;
+                  default:{
+                    if(ipAddressResult.indexOf("{")==0) {
+                      var rets=$.parseJSON(ipAddressResult);
+                      infostr+=Locale["inst.page.message.buy.ip.BATCH"].sprintf(rets["success"], rets["failure"])+'<br/>';
+                    }else{									
+                      isok=false;
+                      infostr+=Locale["inst.page.message.buy.ip.UNKNOWN_ERROR"]+'<br/>';
+                    }
+                  }			
+                }
+                
+                switch(volumeResult.toUpperCase()) {
+                  case 'NO_ENOUGH_STOCK':
+                    isok=false;
+                    infostr+=Locale["inst.page.message.buy.volume.NO_ENOUGH_STOCK"]+'<br/>';
+                    break;
+                  case 'FAILED':
+                  case 'ERROR':
+                  case 'EXCEPTION':
+                    isok=false;
+                    infostr+=Locale["inst.page.message.buy.volume.EXCEPTION"]+'<br/>';
+                    break;
+                  case 'LOWBALANCE':
+                    isok=false;
+                    infostr+=Locale["inst.page.message.buy.volume.LOWBALANCE"]+'<br/>';
+                    break;
+                  case 'DONE':
+                    infostr+=Locale["inst.page.message.buy.volume.DONE"].sprintf("<span style='color:red;font-family:微软雅黑;'>"+Locale["inst.page.message.buy.volume.DONE.keyword"]+"</span>")+'<br/>';
+                    break;
+                  case 'NO_VOLUME':
+                  case 'NOTBUY':
+                    break;
+                  default:{
+                    if(volumeResult.indexOf("{")==0) {
+                      var rets=$.parseJSON(volumeResult);
+                      infostr+=Locale["inst.page.message.buy.volume.BATCH"].sprintf(rets["success"], rets["failure"])+'<br/>';
+                    }else{									
+                      isok=false;
+                      infostr+=Locale["inst.page.message.buy.volume.UNKNOWN_ERROR"]+'<br/>';
+                    }
+                  }
+                }
+							}
+							
+							
+							
+							// 前面的信息都不要了
+							/*
+							if(isok){
+								infostr='订单提交成功，请等待邮件确认。';
+							}else {
+								if(instanceResult.toUpperCase()=='LOWBALANCE'){
+									infostr='订单提交失败，您的账户余额不足，请<span style="text-decoration:underline;color:f60;cursor:pointer;" onclick="window.open(\''+SERVLET['payment']+'?LoginUsername='+paras['username']+'\')">充值</span>。';
+								}else{
+									infostr='服务器维护，请稍后再试。';
+								}
+							}
+							*/
+							
+							
+							if(isok) {
+								$('#subBtn_6').attr('disabled', true);
+								$('#backBtn_6').attr('disabled', true);
+								$('#ok_tips').html(infostr);
+								$('#okDialog').dialog('open');
+							}else{
+								$('#err_tips').html(infostr);
+								$('#errDialog').dialog('open');	
+							}			
+						}
+					);					
+				}else {					
+					$('#tips').html(Locale["inst.page.message.buy.CHARGE"]);
+					$('#checkDialog').dialog('open');					
+				}
+			}
+		}
+	);	
+}
+
+
+
+<!-- 更新数据表格 -->
+function updateTable(data, whichTable) {
+  var sortname='';
+  switch(whichTable) {
+    case '#dataTable_1':
+      sortname='PublishTime';
+      break;
+    case '#dataTable_2':
+      sortname='CPU';
+      break;
+    case '#dataTable_3':
+      sortname='ResourceId';
+      break;
+  }
+
+	jQuery($(whichTable)).clearGridData(true);
+	jQuery($(whichTable)).jqGrid('setGridParam',{datatype:"xmlstring", datastr:data}).sortGrid('PublishTime').trigger("reloadGrid");
+	
+	//jQuery("#dataTable_1").jqGrid('setGridParam',{datatype:"xmlstring", datastr:data}).trigger("reloadGrid");		
+}
+
+<!--Formatter-->
+function kbFmt(cellvalue, options, rowObject) {
+	var retVal=(parseInt(cellvalue)/1024);//+' MB'
+	
+	return retVal;
+}
+
+$(function(){
+	// -------------------------------------Table 的初始化 S------------------------------------------
+	// 初始化table 1
+	jQuery("#dataTable_1").jqGrid({
+		//url:'server.php?q=1',
+		datatype: 'xmlstring', //"xml",
+		//datastr: data,
+		colNames:['ID', Locale["inst.page.table.column.software"],Locale["inst.page.table.column.desc"],
+				Locale["inst.page.table.column.publisher"],Locale["inst.page.table.column.pubtime"],Locale["inst.page.table.column.price"]],
+		colModel:[
+			{name:'id',				index:'id', 			xmlmap: 'id', 			align:'left',	hidden:true},
+			{name:'SoftwareName',	index:'SoftwareName', 	xmlmap: 'SoftwareName', align:'left'},
+			{name:'Description',	index:'Description', 	xmlmap: 'Description',	align:'left'},
+			{name:'Publisher',		index:'Publisher', 		xmlmap: 'Publisher',	align:'left', hidden:true},
+			{name:'PublishTime',	index:'PublishTime',	xmlmap: 'PublishTime',	align:'left'},
+			{name:'Price',			index:'Price',			xmlmap: 'Price',		align:'left',	hidden:true}
+		],
+		xmlReader: {
+			root: 'data',
+			row: 'Software',
+			repeatitems:false,
+			id: 'id'
+		},
+		height: 240,
+		rowNum: 10,
+		autowidth: true,
+		multiselect: true,
+		multiselectWidth: '40px',
+		beforeSelectRow: function(rowid,status) {
+			$(this).resetSelection();
+			$(this).jqGrid('setSelection',rowid);
+		},
+		onSelectAll: function(aRowids,status) {
+			$(this).resetSelection();
+		},
+		pager: jQuery('#pager_1'),
+		sortname: 'PublishTime',
+		sortorder: "asc",
+		viewrecords: true,
+		caption:"<span id='_th1'>"+Locale["inst.page.table.title.software"]+"</span>"
+	}).navGrid('#pager_1',{search:false,refresh:false,edit:false,add:false,del:false});
+	jQuery('#dataTable_1').setLabel(0, Locale["inst.page.table.column.choose"]); // 重新定义选择col的header
+	
+	
+	
+	// 初始化table 2
+	jQuery("#dataTable_2").jqGrid({
+		datatype: 'xmlstring', //"xml",
+		colNames:['ID', Locale["inst.page.table.column.desc"],Locale["inst.page.table.column.maxcpu"],
+				Locale["inst.page.table.column.cpu"],Locale["inst.page.table.column.maxmem"],Locale["inst.page.table.column.mem"]],
+		colModel:[
+			{name:'ResourceId',		index:'ResourceId',		xmlmap: 'ResourceId',	align:'left',	hidden:true},
+			{name:'description',	index:'description',	xmlmap: 'description',	align:'left'},
+			{name:'maxCPU',			index:'maxCPU', 		xmlmap: 'maxCPU', 		align:'left'},
+			{name:'CPU',			index:'CPU', 			xmlmap: 'CPU',			align:'left'},
+			{name:'maxMemory',		index:'maxMemory', 		xmlmap: 'maxMemory',	align:'left', formatter:kbFmt},
+			{name:'memory',			index:'memory',			xmlmap: 'memory',		align:'left', formatter:kbFmt}
+		],
+		xmlReader: {
+			root: 'DATA',
+			row: 'SoftwareResource',
+			repeatitems:false,
+			id: 'ResourceId'
+		},
+		height: 240,
+		rowNum: 10,
+		autowidth: true,
+		multiselect: true,
+		multiselectWidth: '40px',
+		beforeSelectRow: function(rowid,status) {
+			$(this).resetSelection();
+			$(this).jqGrid('setSelection',rowid);
+		},
+		onSelectAll: function(aRowids,status) {
+			$(this).resetSelection();
+		},
+		pager: jQuery('#pager_2'),
+		sortname: 'CPU',
+		sortorder: "asc",
+		viewrecords: true,
+		caption:"<span id='_th2'>"+Locale["inst.page.table.title.hardware"]+"</span>"
+	}).navGrid('#pager_2',{search:false,refresh:false,edit:false,add:false,del:false});
+	jQuery('#dataTable_2').setLabel(0, Locale["inst.page.table.column.choose"]); // 重新定义选择col的header
+	
+	
+	// 初始化table 3
+	jQuery("#dataTable_3").jqGrid({
+		datatype: 'xmlstring', //"xml",
+		colNames:['ID', 'planId', Locale["inst.page.table.column.planname"],
+					Locale["inst.page.table.column.plandesc"],Locale["inst.page.table.column.fee"],
+					Locale["inst.page.table.column.cpuprice"],Locale["inst.page.table.column.memprice"],
+		          	Locale["inst.page.table.column.upprice"],Locale["inst.page.table.column.downprice"],
+		          	Locale["inst.page.table.column.iow"],Locale["inst.page.table.column.ior"],''],
+		colModel:[
+			{name:'ResourceId',		index:'ResourceId',		xmlmap: 'ResourceId',		align:'left',	hidden:true},
+			{name:'vmplanID',		index:'vmplanID',		xmlmap: 'vmplanID',			align:'left',	hidden:true},
+			{name:'Planname',		index:'Planname',		xmlmap: 'Planname',			align:'left', width:'120px'},
+			{name:'PlanDescription',index:'PlanDescription',xmlmap: 'PlanDescription',	align:'left', width:'280px;'},
+			{name:'SubscriptionFee',index:'SubscriptionFee',xmlmap: 'SubscriptionFee', 	align:'left', width:'75px;'},
+			{name:'CpuPrice',		index:'CpuPrice',		xmlmap: 'CpuPrice',			align:'left', width:'75px;'},
+			{name:'MemPrice',		index:'MemPrice', 		xmlmap: 'MemPrice',			align:'left', width:'75px;'},
+			{name:'DownloadPrice',	index:'DownloadPrice',	xmlmap: 'DownloadPrice',	align:'left', width:'75px;'},
+			{name:'UploadPrice',	index:'UploadPrice',	xmlmap: 'UploadPrice',		align:'left', hidden:true},
+			{name:'ioWritePrice',	index:'ioWritePrice',	xmlmap: 'ioWritePrice',		align:'left', hidden:true},
+			{name:'ioReadPrice',	index:'ioReadPrice',	xmlmap: 'ioReadPrice',		align:'left', hidden:true},
+			{name:'act',			index:'act',			align:'center', width:'80px;'}
+		],
+		xmlReader: {
+			root: 'DATA',
+			row: 'SoftwareResource',
+			repeatitems: false,
+			id: 'ResourceId'
+		},
+		gridComplete:function() {
+			{
+				var ids=jQuery('#dataTable_3').jqGrid('getDataIDs');
+				for(var i=0; i<ids.length; i++) {
+					var cl=ids[i];
+					
+					var tmp=jQuery('#dataTable_3').jqGrid('getRowData', ids[i]);
+					//alert(tmp.vmplanID);
+					if((tmp.vmplanID).indexOf('PFM')!=-1) { // PAG PFM
+						// 包月
+						jQuery('#dataTable_3').jqGrid('setRowData', ids[i], {CpuPrice: '-', MemPrice:'-', DownloadPrice:'-', UploadPrice:'-', ioWritePrice:'-', ioReadPrice:'-'});
+					}else {
+						// 即付即用
+						jQuery('#dataTable_3').jqGrid('setRowData', ids[i], {SubscriptionFee: '-'});					
+					}				
+				}
+			}
+			{
+				var ids=jQuery('#dataTable_3').jqGrid('getDataIDs');
+				for(var i=0; i<ids.length; i++) {
+					var cl=ids[i];
+					
+					var rowData=jQuery('#dataTable_3').jqGrid('getRowData', cl);
+					
+					var args=''.makeDetailStr(Locale["inst.page.detail.item.plan.name"],rowData.Planname)
+						.makeDetailStr(Locale["inst.page.detail.item.plan.desc"],rowData.PlanDescription)
+						.makeDetailStr(Locale["inst.page.detail.item.plan.fee"],rowData.SubscriptionFee)
+						.makeDetailStr(Locale["inst.page.detail.item.plan.cpuprice"],rowData.CpuPrice)
+						.makeDetailStr(Locale["inst.page.detail.item.plan.memprice"],rowData.MemPrice)
+						.makeDetailStr(Locale["inst.page.detail.item.plan.netprice"],rowData.DownloadPrice);
+					
+					detailDiv="<a href='#' onclick='window.open(\"detail.htm?args="+args+"\", \"\", \"height=400, "+
+							"width=600, top=100, left=200, toolbar=no, menubar=no, scrollbars=no, "+
+							"resizable=no,location=no, status=no\");return false;'><img src='image/images/tree_file.gif'/>"+
+							Locale["inst.page.table.item.detail"]+"</a>";
+							
+					jQuery('#dataTable_3').jqGrid('setRowData', ids[i], {act: detailDiv});
+				}	
+			}
+		},
+		height: 240,
+		rowNum: 10,
+		autowidth: true,
+		multiselect: true,
+		multiselectWidth: '40px',
+		beforeSelectRow: function(rowid,status) {
+			$(this).resetSelection();
+			$(this).jqGrid('setSelection',rowid);
+		},
+		onSelectAll: function(aRowids,status) {
+			$(this).resetSelection();
+		},
+		pager: jQuery('#pager_3'),
+		sortname: 'ResourceId',
+		sortorder: "asc",
+		viewrecords: true,
+		caption:"<span id='_th3'>"+Locale["inst.page.table.title.plan"]+"</span>"
+	}).navGrid('#pager_3',{search:false,refresh:false,edit:false,add:false,del:false});
+	jQuery('#dataTable_3').setLabel(0, Locale["inst.page.table.column.choose"]); // 重新定义选择col的header
+	
+	// -------------------------------------Table 的初始化 E------------------------------------------
+	
+	
+	
+	
+	
+	// Dialog		
+	$('#checkDialog').dialog({
+		autoOpen: false,
+		width: 400,
+		position: ['center',200],
+		dragable: false,
+		resizable: false,
+		modal: true,
+		buttons: [{
+			text: Locale["inst.dialog.button.close"],
+			click: function() { 
+				$(this).dialog("close"); 
+			}
+		}]
+	});
+	
+	$('#okDialog').dialog({
+		autoOpen: false,
+		width: 400,
+		modal: true,
+		draggable: false,
+		position: ['center',200],
+		resizable: false,
+		buttons: [{
+			text: Locale["inst.dialog.button.close"],
+			click: function() { 
+				$(this).dialog("close"); 
+			}
+		}]
+	});
+	
+	$('#errDialog').dialog({
+		autoOpen: false,
+		width: 400,
+		modal: true,
+		draggable: false,
+		position: ['center',200],
+		resizable: false,
+		buttons: [{
+			text: Locale["inst.dialog.button.close"],
+			click: function() { 
+				$(this).dialog("close"); 
+			}
+		}]
+	});
+	
+	$('#confirmDialogSubmit').dialog({
+		autoOpen: false,
+		width: 400,
+		resizable:false,
+		dragable: false,
+		modal: true,
+		position: ['center',200],
+		buttons: [
+			{
+				text: Locale["inst.dialog.button.confirm"],
+				click: function() {
+					submitTemplate();
+					$(this).dialog("close");
+				}
+			},
+			{
+				text: Locale["inst.dialog.button.cancel"],
+				click: function() {
+					$(this).dialog("close");
+				}
+			}
+		]
+	});
+	
+	$('#confirmDialogSave').dialog({
+		autoOpen: false,
+		width: 400,
+		resizable: false,
+		dragable: false,
+		position: ['center',200],
+		modal: true,
+		buttons: [
+			{
+				text: Locale["inst.dialog.button.confirm"],
+				click: function() {
+					saveTemplate();
+					$(this).dialog("close");
+				}
+			},
+			{
+				text: Locale["inst.dialog.button.cancel"], 
+				click: function() {
+					$(this).dialog("close");
+				}
+			}
+		]
+	});
+	
+	
+	
+	var tips="";
+	
+	
+	// ------------------- Button Action ---------------------
+	// Dialog Link
+	// 按钮action
+	$('#subBtn_1').click(function(){		
+		var sel_id=$('#dataTable_1').jqGrid('getGridParam', 'selarrrow');
+		parent.window.scrollTo(0,0);
+		
+		if(jQuery.trim(sel_id)=='') { // 未选择
+			$('#tips').html(Locale["inst.page.message.subBtn.1.choose.software"]);
+			$('#checkDialog').dialog('open');
+		}else { // 已选择
+			var selItem=$('#dataTable_1').getRowData(sel_id);
+			
+			g_SoftwareName=selItem.SoftwareName;
+			g_SoftwareId=selItem.id;
+			//g_PaymentAmount=selItem.Price;
+			
+			//alert(selItem.id+', '+selItem.Price);
+			gotoTab('#tabs-2');
+		}
+		
+		return false;	
+	});
+	
+	$('#subBtn_2').click(function(){
+		parent.window.scrollTo(0,0);
+				
+		if($('#dataCenter').val()==null || $('#dataCenter').val()=='') {
+			$('#tips').html(Locale["inst.page.message.subBtn.2.choose.datacenter"]);
+			$('#checkDialog').dialog('open');
+		}else{
+			var tmp=$('#dataCenter').val();
+			array=tmp.split('|');
+			
+			g_dataCenter=array[0];
+			g_provider=array[1];
+			g_dataCenterName=array[2];
+			
+			//g_dataCenter=tmp.substring(0, tmp.indexOf('|'));
+			//g_provider=tmp.substring(tmp.indexOf('|')+1, tmp.length);
+			
+			gotoTab('#tabs-3');
+			
+			loadIpPrices(g_dataCenter, g_provider);
+			loadVolumePrices(g_dataCenter);
+			
+			loadHardware(g_dataCenter);
+		}
+		
+		return false;	
+	});
+	
+	
+	$('#subBtn_3').click(function(){
+		var sel_id=$('#dataTable_2').jqGrid('getGridParam', 'selarrrow');
+		parent.window.scrollTo(0,0);
+		
+		if(jQuery.trim(sel_id)=='') { // 未选择
+			$('#tips').html(Locale["inst.page.message.subBtn.3.choose.hardware"]);
+			$('#checkDialog').dialog('open');
+		}else { // 已选择
+			var selItem=$('#dataTable_2').getRowData(sel_id);
+			
+			g_maxCPU=selItem.maxCPU;
+			g_CPU=selItem.CPU;
+			g_maxMemory=selItem.maxMemory;
+			g_memory=selItem.memory;
+			g_SoftwareResourceID=selItem.ResourceId;
+			
+			$('#config_1').show();
+			$('#config_1').html(Locale["inst.page.label.tipsbox.hardware"]+'：'+selItem.description);
+			
+			gotoTab('#tabs-4');
+			
+			loadPlan(g_dataCenter);
+		}
+		
+		return false;	
+	});
+	
+	$('#subBtn_4').click(function(){
+		var sel_id=$('#dataTable_3').jqGrid('getGridParam', 'selarrrow');
+		$.Watermark.HideAll();
+		parent.window.scrollTo(0,0);		
+		
+		if(jQuery.trim(sel_id)=='') { // 未选择
+			$('#tips').html(Locale["inst.page.tab.choose.plan"]);
+			$('#checkDialog').dialog('open');
+		}else if($.checkstr($('#instanceName').val(), 'vmname')==false) {
+			$('#tips').html(Locale["inst.page.message.illegal.vmname"]);
+			$('#checkDialog').dialog('open');
+		}else if($('#instanceName').val().length>8) {
+			$('#tips').html(Locale["inst.page.message.vmname.too.long"]);
+			$('#checkDialog').dialog('open');
+		}else { // 已选择
+			
+			$.post(
+				Server+"/RedDragonEnterprise/InstanceCtrlServlet",
+				{
+					methodType: 'CheckInstanceName',
+					loginUser: getUsername(),
+					instanceName: $('#instanceName').val()
+				},
+				function(data) {
+					//alert(data);			
+					var result=$.createXml(data);
+					switch($(result).find('status').text().toLowerCase()) {
+						case 'error':
+							$('#tips').html(Locale["inst.page.message.subBtn.4.error"]);
+							$('#checkDialog').dialog('open');
+							break;
+						case 'notavailable':
+							$('#tips').html(Locale["inst.page.message.subBtn.4.notavailable"]);
+							$('#checkDialog').dialog('open');
+							break;
+						case 'exception':
+							$('#tips').html(Locale["inst.page.message.subBtn.4.exception"]);
+							$('#checkDialog').dialog('open');
+							break;
+						case 'available': {		
+							var selItem=$('#dataTable_3').getRowData(sel_id);
+							
+							g_PlanResourceId=selItem.ResourceId;
+							g_Planname=selItem.Planname;
+							g_SubscriptionFee=selItem.SubscriptionFee;
+							g_CpuPrice=selItem.CpuPrice;
+							g_MemPrice=selItem.MemPrice;
+							g_DownloadPrice=selItem.DownloadPrice;
+							g_UploadPrice=selItem.UploadPrice;
+							g_ioWritePrice=selItem.ioWritePrice;
+							g_ioReadPrice=selItem.ioReadPrice;
+							
+							if(selItem.vmplanID.indexOf('PFM')>-1) {
+				                g_PaymentAmount=selItem.SubscriptionFee;
+							}else {
+                				g_PaymentAmount=LOWEST_PAYMENT;
+							}
+							
+							g_instanceName=$('#instanceName').val();
+							
+							
+							$('#config_2').show();
+							$('#config_2').html(Locale["inst.page.label.tipsbox.vmname"]+'：'+g_instanceName);
+							$('#cur-conf-div').animate({
+								  left: "500px", top:'130px' //, opacity: 1
+							}, { duration: 1000, queue: false });
+							
+							gotoTab('#tabs-5');
+							
+							break;
+						}
+						default:
+							$('#tips').html(Locale["inst.page.message.undefined"].sprintf($(result).find('status').text()));
+							$('#checkDialog').dialog('open');
+					}				
+					
+				}
+			);
+			
+		}
+		
+		$.Watermark.ShowAll();
+		return false;	
+	});
+	
+	$('#subBtn_5').click(function(){
+		var sel_id=$('#dataTable_4').jqGrid('getGridParam', 'selarrrow');
+		parent.window.scrollTo(0,0);
+		
+		if($('#radio_2').attr('checked')==true && ($('#userType').val()==null || $('#userType').val()=='')) { // 未选择
+			$('#tips').html(Locale["inst.page.tab.choose.usertype"]);
+			$('#checkDialog').dialog('open');
+		}else { // 已选择
+			g_userType=$('#userType').val();
+			g_needIp=$('#radio_1').attr('checked')==true?false:true;
+			gotoTab('#tabs-6');
+		}
+		
+		return false;	
+	});
+	
+	$('#subBtn_6').click(function(){
+		var sel_id=$('#dataTable_5').jqGrid('getGridParam', 'selarrrow');
+		$.Watermark.HideAll();
+		parent.window.scrollTo(0,0);
+		
+		if($('#radio_4').attr('checked')==true && $.checkstr($('#volumeName').val(), 'vmname')==false) { // 未选择
+			$('#tips').html(Locale["inst.page.message.subBtn.6.illegal.name"]);
+			$('#checkDialog').dialog('open');
+		}else if($('#radio_4').attr('checked')==true && $('#volumeName').val().length>10) { // 未选择
+			$('#tips').html(Locale["inst.page.message.subBtn.6.too.long"]);
+			$('#checkDialog').dialog('open');
+		}else if($('#radio_4').attr('checked')==true && ($('#hdSize').val()==null || $('#hdSize').val()=='')) {
+			$('#tips').html(Locale["inst.page.message.subBtn.6.choose.size"]);
+			$('#checkDialog').dialog('open');		
+		}else{ // 已选择
+			g_volumeName=$('#volumeName').val();
+			g_needVolume=$('#radio_3').attr('checked')==true?false:true;
+			g_hdSize=$('#radio_3').attr('checked')==true?'0':$('#hdSize').val();
+			
+			showInfo();
+			gotoTab('#tabs-7');
+		}		
+		$.Watermark.ShowAll();
+		return false;	
+	});
+
+	$('#subBtn_7').click(function() {
+		parent.window.scrollTo(0,0);
+		
+		var ipp=g_needIp?parseFloat(g_ipPrice):0;
+		var vop=g_needVolume?parseFloat(g_volumePrice)*parseFloat(g_hdSize):0;
+		
+		g_orderAmount=$("#orderamount").val();
+		
+		$('#confirmInfoSubmit').html(Locale["inst.page.message.buy.submit"].sprintf(
+			'<label style="color:red;line-height:40px;font-size:18px;vertical-align:bottom;font-weight:bold;">'
+			+((parseFloat(g_PaymentAmount)+vop+ipp)*parseFloat(g_orderAmount)).toFixed(2)+'</label>'));
+		$('#confirmDialogSubmit').dialog('open');
+		
+		return false;
+	});
+
+
+	$('#backBtn_2').click(function(){
+		gotoTab('#tabs-1');		
+		return false;	
+	});
+	$('#backBtn_3').click(function(){
+		gotoTab('#tabs-2');		
+		return false;	
+	});
+	$('#backBtn_4').click(function(){
+		$('#config_1').hide();
+		gotoTab('#tabs-3');		
+		return false;	
+	});
+	$('#backBtn_5').click(function(){
+		$('#cur-conf-div').animate({
+			  left: "260px", top:'143px' //, opacity: 1
+		}, { duration: 1000, queue: false });
+		
+		$('#config_2').hide();
+		gotoTab('#tabs-4');		
+		return false;	
+	});
+	$('#backBtn_6').click(function(){
+		gotoTab('#tabs-5');
+		return false;	
+	});
+	$('#backBtn_7').click(function(){
+		gotoTab('#tabs-6');		
+		return false;	
+	});
+	
+	$('#saveBtn').click(function(){
+		parent.window.scrollTo(0,0);	
+		//alert(g_needVolume+', '+g_needIp+', '+g_SoftwareResourceID+', '+g_dataCenter+', '+g_hdSize+', '+g_userType);
+		$('#confirmInfoSave').html(Locale["inst.dialog.confirm.save.subscript"]);
+		$('#confirmDialogSave').dialog("open");
+		
+		return false;	
+	});
+		
+	$('input[name=needVolume]:radio').change(function(){
+		if($('#radio_3').attr('checked')==true) {
+			$('#hdSizeDiv').hide('drop');
+			$('#volumeName').attr('disabled','disabled');
+		}else {
+			$('#hdSizeDiv').show('drop');
+			$('#volumeName').attr('disabled','');
+		}
+	});
+	
+	$('input[name=needIp]:radio').change(function(){
+		if($('#radio_1').attr('checked')==true) {
+			$('#userTypeDiv').hide();
+		}else {
+			$('#userTypeDiv').show();
+		}
+	});
+	
+	
+	// Button
+	// 初始化Button
+	$('#subBtn_1').button();
+	$('#subBtn_2').button();
+	$('#subBtn_3').button();
+	$('#subBtn_4').button();
+	$('#subBtn_5').button();
+	$('#subBtn_6').button();
+	$('#subBtn_7').button();
+	
+	$('#backBtn_2').button();
+	$('#backBtn_3').button();
+	$('#backBtn_4').button();
+	$('#backBtn_5').button();
+	$('#backBtn_6').button();
+	$('#backBtn_7').button();
+	
+	$('#saveBtn').button();
+	
+	$("button[name='prompt']").button();
+	
+	
+	$('#tabs').tabs({disabled:[1,2,3,4,5,6]});//{disabled:[1,2,3,4,5]}	// {fx: { opacity: 'toggle' }}
+	
+	showInfo();
+});
+
+		
+$(document).ready(
+	function(){
+		initLocale();
+		
+		if(getUsername()=='') {
+			// 尚未登录
+		}else {		
+			// 已登陆, 装载数据初始化
+			//loadData();
+			
+			// 装载镜像产品列表
+			loadSoftware();
+			
+			// 装载数据中心列表
+			loadDataCenter();
+			
+			$('#instanceName').Watermark(Locale["inst.page.message.specify.instance.name"], '#7e7e7e');
+			$('#volumeName').Watermark(Locale["inst.page.message.specify.volume.name"], '#7e7e7e');
+			
+			$('#hdSizeDiv').hide();
+			$('#userTypeDiv').hide();
+			
+		}
+		
+		// 重置dataTable的checkbox样式, 有点问题, 暂时不用
+		/*
+		$(':checkbox').each(function(index, element) {
+			$(element).after('<label for="'+$(element).attr('id')+'">&nbsp;</label>').prettyCheckboxes();
+		});
+		*/
+		
+		// 设置radio button的样式
+		//$(':radio').prettyCheckboxes({'display':'inline'}); //这个样式有bug, 会产生两次change事件
+	}
+);
+
+function gotoTab(which) {
+	$('#tabs').tabs('option', 'disabled', []);
+	$('#tabs').tabs('select', which);
+	$('#tabs').tabs('option', 'disabled', [0, 1, 2, 3, 4, 5, 6]);
+	$('#tabs').tabs('enable', which);
+	parent.window.scrollTo(0, 0);
+}
+
+function initLocale() {
+	$("#checkDialog").attr("title", Locale["inst.dialog.title.tips"]);
+	$("#okDialog").attr("title", Locale["inst.dialog.title.tips"]);
+	$("#errDialog").attr("title", Locale["inst.dialog.title.tips"]);
+	$("#confirmDialogSubmit").attr("title", Locale["inst.dialog.title.tips"]);
+	$("#confirmDialogSave").attr("title", Locale["inst.dialog.title.tips"]);
+	
+	$("#tab_title_1").html(Locale["inst.page.tab.title.1"]);
+	$("#tab_title_2").html(Locale["inst.page.tab.title.2"]);
+	$("#tab_title_3").html(Locale["inst.page.tab.title.3"]);
+	$("#tab_title_4").html(Locale["inst.page.tab.title.4"]);
+	$("#tab_title_5").html(Locale["inst.page.tab.title.5"]);
+	$("#tab_title_6").html(Locale["inst.page.tab.title.6"]);
+	$("#tab_title_7").html(Locale["inst.page.tab.title.7"]);
+	
+	$("#banner").html(Locale["inst.banner"]);
+	
+	$("button[name='prompt']").html(Locale["inst.page.button.prompt"]);
+	
+	$("#subBtn_1").html(Locale["inst.page.button.subBtn_1"]);
+	$("#subBtn_2").html(Locale["inst.page.button.subBtn_2"]);
+	$("#subBtn_3").html(Locale["inst.page.button.subBtn_3"]);
+	$("#subBtn_4").html(Locale["inst.page.button.subBtn_4"]);
+	$("#subBtn_5").html(Locale["inst.page.button.subBtn_5"]);
+	$("#subBtn_6").html(Locale["inst.page.button.subBtn_6"]);
+	$("#subBtn_7").html(Locale["inst.page.button.subBtn_7"]);
+	
+	$("#backBtn_2").html(Locale["inst.page.button.backBtn_2"]);
+	$("#backBtn_3").html(Locale["inst.page.button.backBtn_3"]);
+	$("#backBtn_4").html(Locale["inst.page.button.backBtn_4"]);
+	$("#backBtn_5").html(Locale["inst.page.button.backBtn_5"]);
+	$("#backBtn_6").html(Locale["inst.page.button.backBtn_6"]);
+	$("#backBtn_7").html(Locale["inst.page.button.backBtn_7"]);
+	
+	$("#tab_2_notice_1").html(Locale["inst.page.tab.2.notice.1"]);
+	$("#tab_2_notice_2").html(Locale["inst.page.tab.2.notice.2"]);
+	$("#choose_datacenter").html(Locale["inst.page.tab.choose.datacenter"]);
+	$("#option_choose_datacenter").html(Locale["inst.page.tab.option.choose.datacenter"]);
+	$("#tab_4_notice").html(Locale["inst.page.tab.4.notice"]);
+	$("#label_instance_name").html(Locale["inst.page.tab.4.label.instance.name"]);
+	$("#label_instance_name_notice").html(Locale["inst.page.tab.4.label.name.notice"]);
+	$("#label_not_need_ip").html(Locale["inst.page.tab.5.label.not.need.ip"]);
+	$("#label_need_ip").html(Locale["inst.page.tab.5.label.need.ip"]);
+	
+	$("#choose_usertype").html(Locale["inst.page.tab.option.choose.usertype"]);
+	$("#option_web").html(Locale["inst.page.tab.option.web"]);
+	$("#option_personal").html(Locale["inst.page.tab.option.personal"]);
+	$("#label_not_need_volume").html(Locale["inst.page.tab.6.label.not.need.volume"]);
+	$("#label_need_volume").html(Locale["inst.page.tab.6.label.need.volume"]);
+	$("#choose_volume_size").html(Locale["inst.page.tab.option.choose.volumesize"]);
+	$("#label_volume_name").html(Locale["inst.page.tab.6.label.volume.name"]);
+	$("#volumeName").attr("title", Locale["inst.page.tab.6.label.volume.notice"]);
+	$("#tab_7_notice").html(Locale["inst.page.tab.7.notice"]);
+	$("#saveBtn").html(Locale["inst.page.button.saveBtn"]);
+	
+}
+
+</script>
+
+</head>
+<body id="body">
+<!-- check-dialog -->
+
+<div style='display:none;' id="checkDialog" title="">
+	<p><img src='image/bigimg/alert.png' style='vertical-align:top;'/>
+	<label id="tips" style="line-height:40px;vertical-align:bottom;font-size:12px;font-weight:bold;">&nbsp;</label></p>
+</div>
+
+<div style='display:none;' id="okDialog" title="">
+	<p><img src='image/bigimg/ok.png' style='vertical-align:top;'/>
+	<label id="ok_tips" style="line-height:40px;vertical-align:bottom;font-size:12px;font-weight:bold;">&nbsp;</label></p>
+</div>
+
+<div style='display:none;' id="errDialog" title="">
+	<p><img src='image/bigimg/close.png' style='vertical-align:top;'/>
+	<label id="err_tips" style="line-height:40px;vertical-align:bottom;font-size:12px;font-weight:bold;">&nbsp;</label></p>
+</div>
+
+<div style='display:none;' id="confirmDialogSubmit" title="">
+	<p><img src='image/bigimg/alert.png' style='vertical-align:top;'/>
+	<label id="confirmInfoSubmit" style="line-height:40px;vertical-align:bottom;font-size:12px;font-weight:bold;">&nbsp;</label></p>
+</div>
+
+<div style='display:none;' id="confirmDialogSave" title="">
+	<p><img src='image/bigimg/alert.png' style='vertical-align:top;'/>
+	<label id="confirmInfoSave" style="line-height:40px;vertical-align:bottom;font-size:12px;font-weight:bold;">&nbsp;</label></p>
+</div>
+
+<div id='content-container' style='position:relative;'><!-- container begin -->
+
+<!-- 现阶段配置 -->
+<div id='cur-conf-div' style='position:absolute;width:300px;height:20px;background:none;left:260px;top:143px;z-index:255;text-align:left;vertical-align:bottom;'>
+	<label id='config_1' style='display:none;color:#442222;background:#fff7dc;padding:0 10px;line-height:20px;border:1px solid red;'>&nbsp;</label>
+	<label id='config_2' style='display:none;color:#442222;background:#fff7dc;padding:0 10px;line-height:20px;border:1px solid red;'>&nbsp;</label>
+</div>
+
+<!-- 步骤tag -->
+<div style=" padding:40px 0 0 0;  "> <!--style="background:-webkit-gradient(linear,left top,left 44,from(#ffeba5),to(#ffdb71));  border-bottom:1px solid #ffbe00;"-->
+	<label style="text-align:left;display:block;line-height:24px;background:url(image/new/bg2.png)">
+	  	<span id="banner" style="position: relative;color:#222;font-size:20px;font-family:'微软雅黑'; padding:5px;background-color:#FFF; font-weight:bold; margin-left:100px;"></span>
+	</label>
+</div>
+<div id='tabs' style='height:940px;border:0; margin:30px 60px 0 60px;'>
+	<ul>
+		<li><a id="tab_title_1" href="#tabs-1"></a></li>
+		<li><a id="tab_title_2" href="#tabs-2"></a></li>
+		<li><a id="tab_title_3" href="#tabs-3"></a></li>
+		<li><a id="tab_title_4" href="#tabs-4"></a></li>
+		<li><a id="tab_title_5" href="#tabs-5"></a></li>
+		<li><a id="tab_title_6" href="#tabs-6"></a></li>
+		<li><a id="tab_title_7" href="#tabs-7"></a></li>
+	</ul>
+	
+	<!-- 镜像产品列表 -->
+	<div id="tabs-1" style="padding-left:0;">
+		<div id='dataDiv_1' style="width:99%;margin:auto;">
+			<table id="dataTable_1"></table>
+			<div id='pager_1'></div>
+			
+			<div style=" text-align:center;">
+				<button name="prompt" onclick="window.location='host_index.html'" style="margin:auto;margin-top:20px;"></button>
+                <button id='subBtn_1' style="margin:auto;margin-top:20px;"></button>
+			</div>
+		</div>
+	</div>
+	
+	<!-- 数据中心 -->
+	<div id="tabs-2" style="padding-left:0;">
+		<div id='dataDiv_2' style="width:99%;margin:auto;">
+			<p>
+            	<ul style="text-align:left;padding:10px;line-height:24px; font-size:12px;">
+                	<li id="tab_2_notice_1"></li>
+            		<li id="tab_2_notice_2"></li>
+                </ul>
+            </p>
+            
+            
+			<div style=" text-align:center;">
+            	<label id="choose_datacenter" style="margin-right:10px;font-size:14px;vertical-align:baseline;font-family:微软雅黑;font-weight:bold;" for="dataCenter"></label>
+                <select id="dataCenter" style="width:160px;margin-right:20px;vertical-align:baseline;">
+                    <option id="option_choose_datacenter" selected="selected" disabled="disabled"></option>
+                </select>
+				<button id='backBtn_2' style="margin:auto;margin-top:20px;"></button>
+				<button id='subBtn_2' style="margin:auto;margin-top:20px;"></button>
+			</div>
+		</div>
+	</div>
+	
+	
+	<!-- 选择硬件配置 -->
+	<div id="tabs-3" style="padding-left:0;">
+		<div id='dataDiv_3' style="width:99%;margin:auto;">
+			<table id="dataTable_2"></table>
+			<div id='pager_2'></div>
+			
+			<div style=" text-align:center;">
+				<button id='backBtn_3' style="margin:auto;margin-top:20px;"></button>
+				<button id='subBtn_3' style="margin:auto;margin-top:20px;"></button>
+			</div>
+		</div>
+	</div>
+	
+	
+	<!-- 付费套餐 -->
+	<div id="tabs-4" style="padding-left:0;">
+		<div id='dataDiv_4' style="width:99%;margin:auto;">
+			<table id="dataTable_3" style="margin-right:20px;"></table>
+			<div id='pager_3'></div>
+			<div id="tab_4_notice" style='color:red;text-align:left;margin-top:5px;'></div>
+			
+			<div style='vertical-align:middle;margin-top:20px;'>				
+				<table style="width:90%;">
+				<tr>
+					<td style="width:500px;text-align:right;line-height:40px;vertical-align:top;">
+						<img src='image/images/bill.png' style='width:24px;'/>
+						<label id="label_instance_name" for='instanceName' style="font-family:微软雅黑;font-weight:bold; margin-right:10px;"></label>
+						<input id="instanceName" type='text' style="width:160px;" />
+					</td>
+					<td style="white-space:nowrap;line-height:40px;vertical-align:top;">
+						<button id='backBtn_4' style="margin:auto;margin-left:10px;"></button>
+						<button id='subBtn_4' style="margin:auto;"></button>
+					</td>
+				</tr>
+				<tr><td style='text-align:right;'>
+					<label id="label_instance_name_notice"></label>
+				</td></tr>
+				</table>
+			</div>
+		</div>
+	</div>
+	
+	
+	
+	<!-- IP地址 -->
+	<div id="tabs-5">
+		<div id='dataDiv_5' style="width:90%;">
+			<span style="width:98%;margin:10px 0 5px 20px;text-align:left;display:inline-block;line-height:30px;">
+				<input id="radio_1" type="radio" name="needIp" checked="checked" />
+				<label id="label_not_need_ip" style="font-size:14px;font-weight:bold; font-family:微软雅黑;" for="radio_1"></label>
+			</span>
+			
+			<br />
+			
+			<span style="width:98%;margin:5px 0 5px 20px;text-align:left;display:inline-block;line-height:30px;">			
+				<input id="radio_2" type="radio" name="needIp" />
+				<label id="label_need_ip" style="font-size:14px;font-weight:bold;font-family:微软雅黑;display:inline-block;" for="radio_2"></label>
+				<span style="margin:0;padding:0;">
+					<span id='userTypeDiv'>
+						<select id="userType" style="margin:0 0 0 20px;width:160px;">
+							<option id="choose_usertype" selected="selected" disabled="disabled"></option>
+							<option id="option_web" value="web"></option>
+							<option id="option_personal" value="personal"></option>
+						</select>
+					</span>
+				</span>
+			</span>
+			
+			<br />
+			
+			<div id="iptips" style="margin:20px;display:block;text-align:left; border:1px dashed #aaa;padding:10px;">
+			</div>
+			
+			<div style='vertical-align:middle;text-align:left;'>
+				<table> 
+				<!-- <tr>
+				<td style="width:200px;white-space:nowrap;">
+					<label style="color:red;position:relative;">IP地址价格：30 元 每个每月</label>
+				</td>
+				</tr> -->
+				<tr>
+				<td style="width:400px;line-height:60px;">
+				</td>
+				<td style="white-space:nowrap;line-height:60px;">
+					<button id='backBtn_5' style="margin:auto;vertical-align:middle;"></button>
+					<button id='subBtn_5' style="margin:auto;vertical-align:middle;"></button>
+				</td></tr>
+				</table>
+			</div>
+		</div>
+	</div>
+	
+	
+	
+	<!-- 选择扩展磁盘 -->
+	<div id="tabs-6">
+		<span id='dataDiv_6' style="width:90%;">
+			<div style="margin:10px 0 5px 20px; line-height:30px;text-align:left;display:inline-block;width:95%;">
+				<input id="radio_3" type="radio" name="needVolume" checked="checked" />
+				<label id="label_not_need_volume" style="font-size:14px;font-weight:bold; font-family:微软雅黑;" for="radio_3"></label>
+			</div>
+			
+			<br />
+			
+			<div style="margin:5px 0 5px 20px;text-align:left;display:inline-block;width:95%; line-height:30px; ">
+				<table>
+				<tr>
+				<td >
+					<input id="radio_4" type="radio" name="needVolume" />
+					<label id="label_need_volume" style="font-size:14px;font-weight:bold; font-family:微软雅黑;" for="radio_4"></label>
+				</td>
+				<td style='line-height:60px;'>
+				<span id='hdSizeDiv'>
+				<select id="hdSize" style="margin:0;padding:0;width:160px;">
+					<option id="choose_volume_size" selected="selected" disabled="disabled"></option>
+					<option value="5">5 GB</option>
+					<option value="10">10 GB</option>
+					<option value="20">20 GB</option>
+					<option value="50">50 GB</option>
+					<option value="100">100 GB</option>
+				</select>
+				</span>
+				</td></tr></table>
+			</div>
+			
+			<br />
+			
+			<div style="margin:20px 40px 20px 40px;display:block;text-align:left;">
+			&nbsp;
+			</div>
+		
+			<div style="text-align:right;">
+				<table>
+				<tr>
+				<td style='white-space:nowrap;'><label id='volumetips' style="color:red;position:relative;font-weight:bold;"></label></td>
+				</tr>
+				<tr>
+				<td style="width:270px;text-align:right;vertical-align:baseline;">
+					<div style='position:relative;white-space:nowrap;text-align:right;'>						
+						<label id="label_volume_name" for='volumeName' style="font-family:微软雅黑; font-weight:bold;"></label>&nbsp;&nbsp;&nbsp;&nbsp;
+						<input id="volumeName" title="" type='text' disabled="disabled" style="vertical-align:middle;margin:5px;width:140px;" />
+					</div>
+				</td>
+				<td style="white-space:nowrap;">
+					<button id='backBtn_6' style="margin:auto;vertical-align:middle;"></button>
+					<button id='subBtn_6' style="margin:auto;vertical-align:middle;"></button>
+				</td>
+				</tr>
+				</table>
+			</div>
+		</span>
+	</div>
+	
+	
+	<!-- 支付下单 -->
+	<div id="tabs-7">
+		<div id='dataDiv_7' style="width:98%;margin:auto;">
+      <!--
+			<div style="display:inline;background:yellow;font-weight:bold;border:1px orange dotted;color:blue;padding:10px;margin-left:-800px;">
+				<img style="width:20px;;" src="image/images/allinfo.png" />这是您的订单
+			</div>
+			-->
+		
+			<div id='info_form_0' style="text-align:left;margin:15px;"></div>
+			<div id='info_form_1' style="text-align:left;margin:15px;"></div>
+			<div id='info_form_2' style="text-align:left;margin:15px;"></div>
+			<div id='info_form_3' style="text-align:left;margin:15px;"></div>
+			<div id='info_form_4' style="text-align:left;margin:15px;"></div>
+			<div id='info_form_5' style="text-align:left;margin:15px;"></div>
+			<div id="tab_7_notice" style='color:red;text-align:left;margin-top:5px;'></div>
+		
+			<div style="float:right;">	
+				<button id='backBtn_7' style="margin:auto;margin-top:5px;"></button>
+				<button name="prompt" onclick="window.location='host_index.html'" style="margin:auto;margin-top:20px;"></button>
+				<button id='saveBtn' style="margin:auto;margin-top:5px;"></button>
+				<button id='subBtn_7' style="margin:auto;margin-top:5px;"></button>
+			</div>
+		</div>
+	</div>
+
+
+</div>
+
+
+</div><!-- container end -->
+
+</body>
+</html>

@@ -1,0 +1,58 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html dir="ltr" xml:lang="en-gb" xmlns="http://www.w3.org/1999/xhtml" lang="en-gb">
+<head>
+
+
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title></title>
+ 
+<link rel="stylesheet" href="image/custom.css" type="text/css"/>
+<script type="text/javascript" src="js/util.js"></script>
+
+<script type="text/javascript" src="../../locale.jsp"></script>
+
+
+
+</head>
+ 
+ 
+ 
+<body>
+ 
+ 
+<table style='border:0;border-collapse:collapse;color:blue;font-size:12px;width:560px;margin:auto;'>
+<tr>
+	<th colspan='3' style='color:#000000;background:url(image/images/menu_downarrow.png) 10px center no-repeat #f0f0f0;border:1px solid silver;height:32px;'>
+	<script language="javascript">document.write(Locale["inst.page.message.plan.detail"]);</script>
+	</th>
+</tr>
+
+<script language="javascript"> 
+var paras=getParas(location.href);
+
+//document.write(paras['args']);
+
+var elements=paras['args'].split('||');
+//alert(elements.length);
+
+for(i=0; i<elements.length; i++) {
+	var e=elements[i].split('##');
+	//var color=i%2==0?'#f0f0f0':'#fefefe';
+	
+	document.write('<tr style="border-bottom:1px dashed silver;line-height:24px;cursor:default;">'+
+		'<td style="text-align:right;width:120px;white-space:nowrap;color:#000000;">');
+	document.write(unescape(e[0]));
+	document.write('</td><td style="width:40px;">');
+	document.write('&nbsp;');
+	document.write('</td><td style="text-align:left;">');
+	document.write(unescape(e[1]));
+	document.write('</tr>');
+}
+
+</script>
+ 
+</table>
+ 
+</body>
+ 
+</html>

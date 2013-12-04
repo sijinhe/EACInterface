@@ -1,0 +1,70 @@
+/*  
+JAVASCRIPT IMAGE GALLERY W/ mootools
+Description: STYLE SHEET FOR IMAGE GALLERY
+Version: 1.0
+Author: Devin Ross
+Author URI: http://tutorialdog.com
+*/
+
+#img_gallery{ margin:0px auto; padding:0 0 0 0;}
+#img_gallery a{ outline:none; border:none; }
+#img_gallery a img{border:none;}
+
+/* --- IMAGE STAGE */
+#fullimg{
+	width:620px;
+	overflow:hidden;
+	height:324px;
+	float:left;
+}
+#fullimg img{ width:612px; height:324px; margin:0 0 0 0;}
+
+
+/* --- SLIDER --- */
+#img_gallery #wrapper{
+	overflow:hidden;
+	height:328px;
+	margin:0 0px 0px 0;
+	width:358px;
+	float:left;
+}
+
+#items{
+	margin:0px 0px;
+	padding:0px;
+	list-style:none;
+	width:100%;
+	position: relative;
+	letter-spacing:0em;
+}
+#items li{
+	list-style:none;
+	margin:0px;
+	padding:0;
+	display:block;
+	line-height:0;
+	font-size:0;
+}
+#items .thumb{
+	width:358px;
+	height:81px;
+	cursor:pointer;
+	margin:0px;
+	padding:0px;
+}
+
+#items .large{
+	display:none;
+	position:absolute;
+}
+
+#fullimg .thumb{display:none; }
+
+#items .item  p, #items .item  span{
+	display:none;
+	text-indent: -2000em;
+}
+
+#items li a#first {
+	margin:0px 0px 0px 0px;
+}

@@ -1,0 +1,376 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html dir="ltr" xml:lang="en-gb" xmlns="http://www.w3.org/1999/xhtml" lang="en-gb">
+<head>
+
+
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title></title>
+
+<link type="text/css" href="css/smoothness/jquery-ui-1.8.8.custom.css" rel="stylesheet" />
+
+
+<link rel="stylesheet" href="image/template.css" type="text/css">
+<link rel="stylesheet" href="image/constant.css" type="text/css">
+<link rel="stylesheet" href="image/imagegallery.css" type="text/css">
+<link rel="stylesheet" href="image/content.css" type="text/css"/>
+<link rel="stylesheet" href="image/jquery.cluetip.css" type="text/css"/>
+<link rel="stylesheet" href="image/custom.css" type="text/css"/>
+
+<script type="text/javascript" src="js/jquery.js"></script>	
+<script type="text/javascript" src="js/jquery-ui-1.8.8.custom.min.js"></script>
+<script type="text/javascript" src="../../locale.jsp"></script>
+<script type="text/javascript" src="js/check.js"></script>
+<script type="text/javascript" src="js/jquery.blockUI.js"></script>
+<script src="../../js/String.js" language="javascript"></script>
+<script type="text/javascript" src="../../js/base64.js"></script>
+<script type="text/javascript" src="../../js/server.js"></script>
+<script type="text/javascript" src="../../js/jquery.cookie.js"></script>
+<script type="text/javascript" src="../../js/account.js"></script>
+<script type="text/javascript" src="../../js/server.js"></script>
+<script type="text/javascript" src="js/xml.parser.js"></script>
+<script type="text/javascript" src="js/util.js"></script>
+<script type="text/javascript" src="js/jquery.watermarkinput.js"></script>
+<script type="text/javascript" src="js/jquery.cluetip.js"></script>
+
+<!--<script type="text/javascript" src="image/jquery.jNice.js"></script>-->
+
+<!--<link href="image/base.css" rel="stylesheet" type="text/css" />-->
+<!--<link href="image/jNice.css" rel="stylesheet" type="text/css" />-->
+
+<script language="javascript">
+$(document).ajaxStart($.blockUI).ajaxStop($.unblockUI);
+
+<!-- 处理参数 -->	
+var g_price='0';
+		
+<!-- ajax的处理 -->
+$(document).ready(
+	function(){
+		initLocale();
+		
+		if(getUsername()=='') {
+			// 尚未登录
+		}else {	
+			$.post(Server+"/RedDragonEnterprise/InformationRetriverServlet", 
+				{
+	    			methodType: 'GETZONEINFOR'
+				}, 
+				function(data) {
+					var obj=$.createXml(data);
+					
+					var tmp=$(obj).find('datacentres').find('datacentre').find('mydatacentre');					
+					for(i=0; i<tmp.length; i++) {
+						//alert($(tmp[i]).attr('lable'));
+						$('#select_1').append('<option value="'+$(tmp[i]).attr('data')+'">'+$(tmp[i]).attr('lable')+'</option>');
+						
+					}				
+				}
+			);		
+		}		
+	}
+);
+
+
+// load 磁盘价格
+function loadVolumePrices(where) {
+	$.post(Server+"/billingCN/BillingServlet", 
+		{
+			RequestType: 'getResourcePricesByZone',
+			resourceType: 'volume',
+			zone:where
+		}, 
+		function(data) {
+			var obj=$.createXml('<data>'+data+"</data>");
+			var tmp=$(obj).find('resource');
+			
+			//alert($(tmp).attr('price'));
+			g_price=$(tmp).attr('price');
+			
+			$('#pricetips').html(Locale["volume.page.message.price.string"].sprintf("<span style='color:red;'>"+g_price+"</span>"));
+		}
+	);
+}
+
+$(function(){
+	// Button
+	// 初始化Button
+	$("#submitBtn").button();
+
+	$("#select_1").change(function(){
+		var where=$("#select_1").val();
+		if(where!='') {
+			loadVolumePrices(where);
+		}
+	});
+	
+	// Dialog		
+	$('#infoDialog').dialog({
+		autoOpen: false,
+		width: 400,
+		resizable: false,
+		modal: true,
+		buttons: [{
+			text: Locale["volume.dialog.button.close"], 
+			click: function() { 
+				$(this).dialog("close"); 
+			}
+		}]
+	});
+	$('#confirmDialog').dialog({
+		autoOpen: false,
+		width: 400,
+		resizable: false,
+		modal: true,
+		buttons: [
+			{
+				text: Locale["volume.dialog.button.confirm"], 
+				click: function() { 
+					
+					$.post(Server+"/RedDragonEnterprise/StorageCtrlSevlet", 
+						{
+							methodtype: 'createvolumexml',
+							loginUser: getUsername(),
+							Password: getPassword(),
+							hdSize: $('#select_2').val(),
+							zone: $('#select_1').val(),
+							volumeName: $('#volumeName').val()
+						}, 
+						function(data) {					
+							var obj=$.createXml(data);
+							userStatusCheck(obj); // 登陆状态检测
+							var result=$(obj).find('domain').find('status').text();
+							
+							var tips='';
+							switch(result.toLowerCase()) {
+								case 'done':
+									tips=Locale["volume.page.message.done"];						
+									$('#ok_tips').html(tips);
+									$('#okDialog').dialog("open"); 
+									break;
+								case 'lowbalance': {
+									tips=Locale["volume.page.message.lowbalance.string.1"];
+									if($(obj).find('domain').find('status').text().toLowerCase()=='lowbalance') {
+										tips+=": "+Locale["volume.page.message.lowbalance.string.2"];
+									}
+									
+									$('#err_tips').html(tips);
+									$('#errDialog').dialog("open"); 
+									break;
+								}
+								default:
+									tips=Locale["volume.page.message.undefined"].sprintf(result);	
+									$('#err_tips').html(tips);
+									$('#errDialog').dialog("open");
+									break;
+							}
+						}
+					);
+					
+					$('#select_1_dopt').attr('selected', 'selected');
+					$('#select_2_dopt').attr('selected', 'selected');				
+					$('#volumeName').val('');
+					$(this).dialog("close");
+					
+				}
+			},
+			{
+				text: Locale["volume.dialog.button.cancel"], 
+				click: function() { 
+					$(this).dialog("close"); 
+				}
+			}
+		]
+	});
+
+	$('#okDialog').dialog({
+		autoOpen: false,
+		width: 400,
+		modal: true,
+		draggable: false,
+		position: ['center',200],
+		resizable: false,
+		buttons: [{
+			text: Locale["volume.dialog.button.close"], 
+			click: function() { 
+				$(this).dialog("close"); 
+			}
+		}]
+	});
+	
+	$('#errDialog').dialog({
+		autoOpen: false,
+		width: 400,
+		modal: true,
+		draggable: false,
+		position: ['center',200],
+		resizable: false,
+		buttons: [{
+			text: Locale["volume.dialog.button.close"], 
+			click: function() { 
+				$(this).dialog("close"); 
+			}
+		}]
+	});
+		
+	// Dialog Link
+	// 提交
+	$('#submitBtn').click(function(){
+		$.Watermark.HideAll();		
+		
+		var tips="";
+		var isok=true;
+		if($('#select_1').val()=='') {
+			tips=Locale["volume.page.message.choose.datacenter"];
+			isok=false;
+		}else if($('#select_2').val()=='') {
+			tips=Locale["volume.page.message.choose.volumesize"];
+			isok=false;
+		}else if($.checkstr($('#volumeName').val(), 'vmname')==false) {
+			tips=Locale["volume.page.message.illegal.volumename"];
+			isok=false;
+		}else if($('#volumeName').val().length>10) {
+			tips=Locale["volume.page.message.volumename.too.long"];
+			isok=false;
+		}	
+		
+		
+		if(!isok) {
+			$('#tips').html(tips);
+			$('#infoDialog').dialog('open');
+		}else {
+			$('#confirm').html(Locale["volume.page.confirm.buy.volume"].sprintf("<label style='color:red;line-height:40px;font-size:18px;'>"+g_price+"</label>")); //(0.05*parseFloat($('#select_2').val())).toFixed(2)
+			$('#infoDialog').dialog('close');
+			$('#confirmDialog').dialog('open');
+		}
+	
+		$.Watermark.ShowAll();
+		return false;
+	});
+	
+	
+	// 初始化input的watermark
+	$('#volumeName').Watermark(Locale["volume.page.volume.type.in.name"], '#7e7e7e');
+
+});
+
+function initLocale() {
+	
+	$("#banner").html(Locale["volume.banner"]);
+	
+	$("#infoDialog").attr("title", Locale["volume.dialog.title.tips"]);
+	$("#confirmDialog").attr("title", Locale["volume.dialog.title.confirm"]);
+	$("#okDialog").attr("title", Locale["volume.dialog.title.tips"]);
+	$("#errDialog").attr("title", Locale["volume.dialog.title.tips"]);
+	
+	$("#page_title").html(Locale["volume.page.title"]);
+	$("#page_notice_title").html(Locale["volume.page.notice.title"]);
+	$("#page_notice_content").html(Locale["volume.page.notice.content"]);
+	
+	$("#select_1_dopt").html(Locale["volume.page.message.choose.datacenter"]);
+	$("#select_2_dopt").html(Locale["volume.page.message.choose.volumesize"]);
+	
+	$("#submitBtn").html(Locale["volume.page.button.buy"]);
+	
+	$("#volume_price_title").html(Locale["volume.page.price.title"]);
+	$("#pricetips").html(Locale["volume.page.price.datacenter"]);
+	$("#volumeName").html(Locale["volume.page.volume.type.in.name"]);
+	
+}
+
+</script>
+
+</head>
+
+<body id="body">
+
+<!-- check-dialog -->
+
+<div style='display:none;' id="infoDialog" title="">
+	<p><img src='image/bigimg/alert.png' style='vertical-align:top;'/>
+	<label id="tips" style="line-height:40px;vertical-align:bottom;font-size:12px; font-weight:bold;">&nbsp;</label></p>
+</div>
+
+<div style='display:none;' id="confirmDialog" title="">
+	<p><img src='image/bigimg/alert.png' style='vertical-align:top;'/>
+	<label id="confirm" style="line-height:40px;vertical-align:bottom;font-size:12px;font-weight:bold;">&nbsp;</label></p>
+</div>
+
+<div style='display:none;' id="okDialog" title="">
+	<p><img src='image/bigimg/ok.png' style='vertical-align:top;'/>
+	<label id="ok_tips" style="line-height:40px;vertical-align:bottom;font-size:12px;font-weight:bold;">&nbsp;</label></p>
+</div>
+
+<div style='display:none;' id="errDialog" title="">
+	<p><img src='image/bigimg/close.png' style='vertical-align:top;'/>
+	<label id="err_tips" style="line-height:40px;vertical-align:bottom;font-size:12px;font-weight:bold;">&nbsp;</label></p>
+</div>
+
+
+<!-- 标题 -->
+<!-- <div id="tabs"><ul><li class="content-header"><img src='image/images/volume.png'/>购买扩展磁盘：</li></ul> -->
+<div class="contentBody">
+	<!--<label style="text-align:left;font-weight:bold;font-size:16px;display:block;line-height:24px;padding:10px 0 10px 20px;">
+购买云存储空间：
+	</label>-->
+	<!--<div style="width:100%; height:130px; background: url(image/new/bg.png)"></div>-->
+    
+    <div style=" padding:40px 0 0 0;  "> <!--style="background:-webkit-gradient(linear,left top,left 44,from(#ffeba5),to(#ffdb71));  border-bottom:1px solid #ffbe00;"-->
+    	<label style="text-align:left;display:block;line-height:24px;background:url(image/new/bg2.png)">
+			<span id="banner" style="position: relative;color:#222;font-size:20px;font-family:'微软雅黑';padding:5px; background-color:#fff; font-weight:bold; margin-left:100px;"></span>
+		</label>
+	</div>
+	<div style="margin:30px 60px 0 60px; min-width:779px;">
+	<div id="page_title" style=" font-family:'微软雅黑';font-size:20px; padding:10px 0 10px 5px;  color: #000; margin-bottom:30px; border-bottom:1px dotted #999;"></div>   
+
+	<div style="float:left; display:inline; width:450px;;border: 1px #c6c6c6 solid; -moz-border-radius: 1em;-webkit-border-radius: 1em;border-radius: 1em; padding:15px; margin-right:60px;">
+	
+	<label style="text-align:left;font-weight:bold;font-size:12px;display:block;line-height:24px;padding:5px 0 0 20px;">
+    	<img src="image/new/info.png" class="small-icon" style="padding-right:10px;"  />
+    	<span id="page_notice_title"></span>
+	</label>	
+	
+	<label id="page_notice_content" style="text-align:left;color:#222;font-size:12px;display:block;line-height:24px;padding:5px 0px 10px 20px;white-space:normal;">
+		<!-- Notice Content -->
+	</label>
+    </div>
+	
+	<div style='text-align:left;vertical-align:middle; float:left; display:inline; padding-top:40px;'>
+	    <img class="middle-icon" src="image/images/to_go.png" />
+		<label id='pricetips' style='line-height:28px;font-weight:bold;'>
+			<span id="volume_price_title"></span>
+			<label id='pricetips' style='color:red;line-height:28px;'></label>
+		</label>
+		<div>
+		    <div style=" display: inline; margin-right:20px;">	
+		        <div>
+				<select id='select_1' style="width:160px;vertical-align:baseline;">
+					<option id='select_1_dopt' disabled="disabled" selected="selected"></option>
+				</select>
+		        </div>
+		        <div style="margin-top:10px;">
+					<select id='select_2' style="width:160px;margin:0;vertical-align:baseline;">
+						<option id='select_2_dopt' disabled="disabled" selected="selected"></option>
+						<option value="5">5 GB</option>
+						<option value="10">10 GB</option>
+						<option value="20">20 GB</option>
+						<option value="50">50 GB</option>
+						<option value="100">100 GB</option>
+					</select>
+					<input id="volumeName" title="" style="width:160px;margin-left:10px;margin-right:10px;" />
+			        <!-- margin-bottom:12px; -->
+					<a href='#' id="submitBtn"></a>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- 
+</div>
+ -->
+	
+<br/>
+
+
+</body>
+</html>

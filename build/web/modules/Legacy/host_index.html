@@ -1,0 +1,673 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html dir="ltr" xml:lang="en-gb" xmlns="http://www.w3.org/1999/xhtml" lang="en-gb">
+<head>
+
+
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title></title>
+
+<link type="text/css" href="css/smoothness/jquery-ui-1.8.8.custom.css" rel="stylesheet" />
+
+
+<link rel="stylesheet" href="image/template.css" type="text/css">
+<link rel="stylesheet" href="image/constant.css" type="text/css">
+<link rel="stylesheet" href="image/imagegallery.css" type="text/css">
+<link rel="stylesheet" href="image/ui.jqgrid.css" type="text/css"/>
+<link rel="stylesheet" href="image/content.css" type="text/css"/>
+<link rel="stylesheet" href="image/custom.css" type="text/css"/>
+<link rel="stylesheet" href="image/jquery.capSlide.css" type="text/css"/>
+<link rel="stylesheet" href="image/tip-darkgray/tip-darkgray.css" type="text/css" />
+<link rel="stylesheet" href="image/tip-yellowsimple/tip-yellowsimple.css" type="text/css" />
+
+
+
+<script type="text/javascript" src="js/jquery.js"></script>
+<script type="text/javascript" src="js/jquery-ui-1.8.8.custom.min.js"></script>
+<script type="text/javascript" src="../../locale.jsp"></script>
+<script type="text/javascript" src="js/check.js"></script>
+<script type="text/javascript" src="js/jquery.blockUI.js"></script>
+<script src="../../js/String.js" language="javascript"></script>
+<script type="text/javascript" src="../../js/base64.js"></script>
+<script type="text/javascript" src="../../js/server.js"></script>
+<script type="text/javascript" src="../../js/jquery.cookie.js"></script>
+<script type="text/javascript" src="../../js/account.js"></script>
+<script type="text/javascript" src="../../js/server.js"></script>
+<script type="text/javascript" src="js/xml.parser.js"></script>
+<script type="text/javascript" src="js/util.js"></script>
+<script type="text/javascript" src="js/grid.locale-cn.js"></script>
+<script type="text/javascript" src="js/jquery.jqGrid.min.js"></script>
+<script type="text/javascript" src="js/common.js"></script>
+<script type="text/javascript" src="js/jquery.capSlide.js"></script>
+<script type="text/javascript" src="js/jquery.pngFix-1.2.js"></script>
+<script type="text/javascript" src="js/jquery.poshytip.js"></script>
+
+
+<style>
+th,td{vertical-align:middle;}
+.demo{
+	float:left;
+	margin: 40px;
+}
+
+</style>
+
+<script language="javascript">
+$(document).ajaxStart($.blockUI).ajaxStop($.unblockUI);
+
+<!-- 处理参数 -->	
+var LOWEST_PAYMENT='50';
+
+function loadData() {
+	// 发送查询请求
+	$.post(Server+"/RedDragonEnterprise/orderManagement",
+		{
+			operation: 'displayTemplate',
+			login: getUsername(),
+			templateType: 'real'
+		}, 
+		function(data) {
+			data='<root>'+data+'</root>';
+			userStatusCheck($.createXml(data)); // 登陆状态检测
+			createIcons(data, '#iconContainer', false, true);
+			
+			var style="position:relative;cursor:pointer;width:300px;height:180px;vertical-align:top;display:inline-block;margin:0px 10px 10px 0;";
+			$('<span id="customBtn" style="'+style+'"><img  src="image/new/customConfig.gif"/><span style="position:absolute;left:90px;width:200px;text-align:center;top:70px;font-size:26px;font-weight:bold;height:40px;line-height:40px;">'+Locale["inst.page.custom.config"]+'</span></span>').appendTo("#iconContainer");
+			
+		}
+		
+	);
+	
+	$.post(Server+"/RedDragonEnterprise/orderManagement", 
+		{
+			operation: 'displayTemplate',
+			login: 'default',
+			templateType: 'real'
+		}, 
+		function(data) {
+			data='<root>'+data+'</root>';
+			userStatusCheck($.createXml(data)); // 登陆状态检测
+      		//alert(data);
+			createIcons(data, '#iconContainer2', false, false);
+			
+		}
+	);
+	
+}
+	
+//window.onload=fixHeight;		
+function fixHeight() {
+	//alert(prompt());
+	$(parent.document.body).find('#content_frame').attr('height', 50+$('#body').height());//50+$('#body').height()
+}
+
+function createIcons(data, where, showPayment, deleteBtn) {
+	var children=$($.createXml(data)).find('template');
+	
+	for(i=1; i<=children.length; i++) {
+		var orient='right';
+		if(i%5==4 || i%5==0) {
+			orient='left';
+		}
+		
+		if(deleteBtn){
+			makeInfoIcon(where, where.substring(1, where.length)+'-icon-'+i, 
+					orient, children[i-1], Locale["inst.page.button.buy"], showPayment, Locale["inst.page.button.delete"], false);
+		}else {
+			makeInfoIcon(where, where.substring(1, where.length)+'-icon-'+i, 
+					orient, children[i-1], Locale["inst.page.button.buy"], showPayment, '', false);			
+		}
+		
+		
+		setTimeout(fixHeight, 500);
+	}
+	
+}
+		
+<!-- ajax的处理 -->
+$(document).ready(
+	function(){
+		document.body.onresize=fixHeight;		
+		
+		if(getUsername()=='') {
+
+			// 尚未登录
+		}else {		
+			
+			// 已登陆, 装载数据初始化
+			loadData();			
+		}
+	}
+);
+
+
+$(function(){
+	initLocale();
+	
+	// Button
+	// 初始化Button
+	$("#submitBtn").button();
+	$("#resetBtn").button();
+	$("#radioset").buttonset();
+	
+	$('#iconContainer').delegate("#customBtn", "click", function(){
+		location.href="host.html";
+		return false;																 
+	});
+				
+	// Dialog
+	$('#checkDialog').dialog({
+		autoOpen: false,
+		width: 680,
+		modal: true,
+		draggable: false,
+		position: ['center',200],
+		resizable: false,
+		buttons: [{
+			text: Locale["inst.dialog.button.close"], 
+			click: function() { 
+				$(this).dialog("close"); 
+			}
+		}]
+	});
+	
+	$('#okDialog').dialog({
+		autoOpen: false,
+		width: 680,
+		modal: true,
+		draggable: false,
+		position: ['center',200],
+		resizable: false,
+		buttons: [{
+			text: Locale["inst.dialog.button.close"],
+			click: function() { 
+				$(this).dialog("close"); 
+			}
+		}]
+	});
+	
+	$('#errDialog').dialog({
+		autoOpen: false,
+		width: 680,
+		modal: true,
+		draggable: false,
+		position: ['center',200],
+		resizable: false,
+		buttons: [{
+			text: Locale["inst.dialog.button.close"],
+			click: function() { 
+				$(this).dialog("close"); 
+			}
+		}]
+	});
+	
+	$('#deleteDialog').dialog({
+		autoOpen: false,
+		width: 420,
+		modal: true,
+		draggable: false,
+		position: ['center',200],
+		resizable: false,
+		buttons: [
+			{
+				text: Locale["inst.dialog.button.confirm"],
+				click: function() {
+	
+					$.post(Server+"/RedDragonEnterprise/orderManagement",
+						{
+							operation: 'deleteTemplate',
+							templateId: v_templateId
+						},
+						function(data) {
+							data='<root>'+data+'</root>';
+							var tmp=$.createXml(data);
+							
+							switch($(tmp).find('root').find('result').text().toLowerCase()) {
+								case 'true':
+									$('#tips').html(Locale["inst.page.message.delete.true"]);
+									location.reload();
+									break;
+								case 'false':
+									$('#tips').html(Locale["inst.page.message.delete.false"]);
+									break;
+								default:
+									$('#tips').html(Locale["inst.page.message.undefined"].sprintf($(tmp).find('root').find('result').text()));										
+							}
+							
+							$('#checkDialog').dialog('open');
+						}
+					);
+	
+					$(this).dialog("close");
+				}
+			},
+			{
+				text: Locale["inst.dialog.button.cancel"], 
+				click: function() { 
+					$(this).dialog("close"); 
+				}
+			}
+		]
+	});	
+	
+	$('#buyDialog').dialog({
+		autoOpen: false,
+		width: 600,
+		resizable: false,
+		modal: true,
+		draggable: false,
+		position: ['center', 10],
+		buttons: [
+			{
+				text: Locale["inst.dialog.button.buy"], 
+				click: function() {
+					parent.window.scrollTo(0,200);
+					
+					if($.checkstr($('#instanceName').val(), 'vmname')==false) {
+						$('#tips').html(Locale["inst.page.message.illegal.vmname"]);
+						$('#checkDialog').dialog('open');	
+						return;
+					}if($('#instanceName').val().length>8) {
+						$('#tips').html(Locale["inst.page.message.vmname.too.long"]);
+						$('#checkDialog').dialog('open');	
+						return;
+					}else if(v_volumeSize!='0' && $.checkstr($('#volumeName').val(), 'vmname')==false) {
+						$('#tips').html(Locale["inst.page.message.illegal.volumename"]);
+						$('#checkDialog').dialog('open');	
+						return;
+					}else if(v_volumeSize!='0' && $('#volumeName').val().length>10) {
+						$('#tips').html(Locale["inst.page.message.volumename.too.long"]);
+						$('#checkDialog').dialog('open');	
+						return;
+					}
+					
+					// 检查主机名				
+					$.post(
+						Server+"/RedDragonEnterprise/InstanceCtrlServlet",
+						{
+							methodType: 'CheckInstanceName',
+							loginUser: getUsername(),
+							instanceName: $('#instanceName').val()
+						},
+						function(data) {
+							//alert(data);			
+							var result=$.createXml(data);
+							switch($(result).find('status').text().toLowerCase()) {
+								case 'error':
+									$('#tips').html(Locale["inst.page.message.check.name.error"]);
+									$('#checkDialog').dialog('open');
+									break;
+								case 'notavailable':
+									$('#tips').html(Locale["inst.page.message.check.name.notavailable"]);
+									$('#checkDialog').dialog('open');
+									break;
+								case 'exception':
+									$('#tips').html(Locale["inst.page.message.check.name.exception"]);
+									$('#checkDialog').dialog('open');
+									break;
+								case 'available': {	
+									$(this).dialog("close"); 				
+									buyit();							
+									break;
+								}
+								default:
+									$('#tips').html(Locale["inst.page.message.undefined"].sprintf($(result).find('status').text()));
+									$('#checkDialog').dialog('open');
+							}				
+							
+						}
+					);	
+					
+				}
+			},
+			{
+				text: Locale["inst.dialog.button.close"],
+				click: function() {
+					$(this).dialog("close"); 
+				}
+			}
+		]
+	});
+	
+	// Dialog Link
+	// 提交
+	$('#submitBtn').click(function(){	
+		loadData();
+				
+		return false;	
+	});
+
+	
+	//$('#tabs').tabs();
+	
+});
+
+function buyit() {			
+	$('#buyDialog').dialog("close");
+	
+	$.post(
+		Server+"/billingCN/BillingServlet",
+		{
+			RequestType: 'getUserInfo',
+			Password: getPassword(),
+			LoginUsername: getUsername()
+		},
+		function(data) {
+			var obj=$.createXml('<data>'+data+'</data>');
+			
+			userStatusCheck(obj);
+			
+			if($(obj).find('status').text().toLowerCase()=='valid') {
+				var tmp=$(obj).find('Balance').text();
+				var balVal=parseFloat(tmp).toFixed(2);
+				
+				
+				if(parseInt(parseFloat(balVal)*parseFloat(LOWEST_PAYMENT))>=parseInt(parseFloat(v_paymentAmount)*parseFloat(LOWEST_PAYMENT))) {
+					$.post(
+						Server+"/RedDragonEnterprise/InstanceCtrlServlet",
+						{
+							methodType: 'GreenPath',
+							loginUser: getUsername(),
+							Password: getPassword(),
+							zone: $('#dataCenter').val(),
+							SoftwareId: v_softwareId,
+							SoftwareResourceID: v_softwareResourceId,
+							PaymentAmount: v_paymentAmount,
+							
+							maxCPU: v_maxCpu,
+							cpu: v_cpu,
+							maxMemo: parseInt(v_maxMemory)/1024,
+							memo: parseInt(v_memory)/1024,
+							instanceName: $('#instanceName').val(),
+							
+							doIP: v_needIP+'',
+							userType: v_ipType,
+							provider: $('#dc_'+$('#dataCenter').val()).attr('name'), //v_provider
+							
+							doVolume: v_volumeSize=='0'?'flase':'true',
+							hdSize: v_volumeSize,
+							volumeName: $('#volumeName').val(),
+							
+							orderamount: $("#orderamount").val()
+						},
+						function(data) {						
+							//alert(data);						
+							var result=$.createXml(data);
+							userStatusCheck(result);
+							
+							var isok=true;
+							
+							var orderId=$(result).find('getOrderID').text();
+							var instanceResult=$(result).find('instanceResult').text();
+							var ipAddressResult=$(result).find('ipAddressResult').text();
+							var volumeResult=$(result).find('volumeResult').text();
+
+							var infostr=Locale["inst.page.message.buy.prefix"];
+							switch(orderId.toUpperCase()) {
+				                case 'NO_ENOUGH_STOCK':
+				                  isok=false;
+				                  infostr+=Locale["inst.page.message.buy.NO_ENOUGH_STOCK"]+'<br/>';
+				                  break;
+								case 'NOIDORDER':
+									isok=false;
+									infostr+=Locale["inst.page.message.buy.NOIDORDER"]+'<br/>';
+								case 'ERROR':
+									isok=false;
+									infostr+=Locale["inst.page.message.buy.ERROR"]+'<br/>';
+								case 'EXCEPTION':
+									isok=false;
+									infostr+=Locale["inst.page.message.buy.EXCEPTION"]+'<br/>';
+									break;
+								case 'LOWBALANCE':
+									isok=false;
+									infostr+=Locale["inst.page.message.buy.LOWBALANCE"]+'<br/>';
+									break;
+								default : {
+								}
+							}
+							
+							if(isok){							
+								infostr=Locale["inst.page.message.buy.prefix.inst"];
+								switch(instanceResult.toUpperCase()) {
+				                  case 'NO_ENOUGH_STOCK':
+				                    isok=false;
+				                    infostr+=Locale["inst.page.message.buy.inst.NO_ENOUGH_STOCK"]+'<br/>';
+				                    break;
+									case 'FAILED':
+									case 'ERROR':
+									case 'EXCEPTION':
+										isok=false;
+										infostr+=Locale["inst.page.message.buy.inst.EXCEPTION"]+'<br/>';
+										break;
+									case 'NAMENOTAVAILABLE':
+										isok=false;
+										infostr+=Locale["inst.page.message.buy.inst.NAMENOTAVAILABLE"]+'<br/>';
+										break;
+									case 'OSTYPEERROR':
+										isok=false;
+										infostr+=Locale["inst.page.message.buy.inst.OSTYPEERROR"]+'<br/>';
+										break;
+									case 'CREATED':
+										infostr+=Locale["inst.page.message.buy.inst.CREATED"].sprintf("<span style='color:red;vertical-align:bottom;font-family:微软雅黑;'>"+Locale["inst.page.message.buy.inst.CREATED.keyword"]+"</span>")+'<br/>';
+										break;
+                  					case 'LOWBALANCE':
+										isok=false;
+										infostr+=Locale["inst.page.message.buy.inst.LOWBALANCE"]+'<br/>';
+										break;
+									case 'ONEVMONLY':
+										isok=false;
+										infostr+=Locale["inst.page.message.buy.inst.ONEVMONLY"]+'<br/>';
+										break;
+									default:{
+					                    if(instanceResult.indexOf("{")==0) {
+					                      var rets=$.parseJSON(instanceResult);
+					                      infostr+=Locale["inst.page.message.buy.inst.DONE"].sprintf(rets["success"], rets["failure"])+'<br/>';
+					                    }else{									
+					                      isok=false;
+					                      infostr+=Locale["inst.page.message.buy.inst.UNKNOWN_ERROR"]+'<br/>';
+					                    }
+									}
+                				}
+                
+                switch(ipAddressResult.toUpperCase()) {
+                  case 'NO_ENOUGH_STOCK':
+                    isok=false;
+                    infostr+=Locale["inst.page.message.buy.ip.NO_ENOUGH_STOCK"]+'<br/>';
+                    break;
+                  case 'FAILED':
+                  case 'ERROR':
+                  case 'EXCEPTION':
+                    isok=false;
+                    infostr+=Locale["inst.page.message.buy.ip.EXCEPTION"]+'<br/>';
+                    break;
+                  case 'NOIP':
+                    isok=false;
+                    infostr+=Locale["inst.page.message.buy.ip.NOIP"]+'<br/>';
+                    break;
+                  case 'WEB':
+                    infostr+=Locale["inst.page.message.buy.ip.WEB"]+'<br/>';
+                    break;
+                  case 'LOWBALANCE':
+                    isok=false;
+                    infostr+=Locale["inst.page.message.buy.ip.LOWBALANCE"]+'<br/>';
+                    break;
+                  case 'SUCCESSFUL':
+                  case 'PERSONAL':
+                    infostr+=Locale["inst.page.message.buy.ip.PERSONAL"].sprintf('<span style="color:red;vertical-align:bottom;font-family:微软雅黑;">'+Locale["inst.page.message.buy.ip.PERSONAL.keyword"]+'</span>')+'<br/>';
+                    break;
+                  case 'NO_IP':
+                  case 'NOTBUY':
+                    break;
+                  default:{
+                    if(ipAddressResult.indexOf("{")==0) {
+                      var rets=$.parseJSON(ipAddressResult);
+                      infostr+=Locale["inst.page.message.buy.ip.BATCH"].sprintf(rets["success"], rets["failure"])+'<br/>';
+                    }else{									
+                      isok=false;
+                      infostr+=Locale["inst.page.message.buy.ip.UNKNOWN_ERROR"]+'<br/>';
+                    }
+                  }					
+                }
+                
+                switch(volumeResult.toUpperCase()) {
+                  case 'NO_ENOUGH_STOCK':
+                    isok=false;
+                    infostr+=Locale["inst.page.message.buy.volume.NO_ENOUGH_STOCK"]+'<br/>';
+                    break;
+                  case 'FAILED':
+                  case 'ERROR':
+                  case 'EXCEPTION':
+                    isok=false;
+                    infostr+=Locale["inst.page.message.buy.volume.EXCEPTION"]+'<br/>';
+                    break;
+                  case 'LOWBALANCE':
+                    isok=false;
+                    infostr+=Locale["inst.page.message.buy.volume.LOWBALANCE"]+'<br/>';
+                    break;
+                  case 'DONE':
+                    infostr+=Locale["inst.page.message.buy.volume.DONE"].sprintf("<span style='>"+Locale["inst.page.message.buy.volume.DONE.keyword"]+"</span>")+'<br/>';
+                    break;
+                  case 'NO_VOLUME':
+                  case 'NOTBUY':
+                    break;
+                  default:{
+                    if(volumeResult.indexOf("{")==0) {
+                      var rets=$.parseJSON(volumeResult);
+                      infostr+=Locale["inst.page.message.buy.volume.BATCH"].sprintf(rets["success"], rets["failure"])+'<br/>';
+                    }else{									
+                      isok=false;
+                      infostr+=Locale["inst.page.message.buy.volume.UNKNOWN_ERROR"]+'<br/>';
+                    }
+                  }
+                }
+							}
+							
+							
+							
+							// 前面的信息都不要了
+							/*
+							if(isok){
+								infostr='订单提交成功，请等待邮件确认。';
+							}else {
+								if(instanceResult.toUpperCase()=='LOWBALANCE'){
+									infostr='订单提交失败，您的账户余额不足，请<span style="text-decoration:underline;color:f60;cursor:pointer;" onclick="window.open(\''+SERVLET['payment']+'?LoginUsername='+paras['username']+'\')">充值</span>。';
+								}else{
+									infostr='服务器维护，请稍后再试。';
+								}
+							}
+							*/
+							
+							if(isok) {
+								$('#subBtn_6').attr('disabled', true);
+								$('#backBtn_6').attr('disabled', true);	
+								$('#ok_tips').html(infostr);		
+								$('#okDialog').dialog('open');	
+							}else{								
+								$('#err_tips').html(infostr);		
+								$('#errDialog').dialog('open');								
+							}						
+						}
+					);
+					
+				}else {					
+					$('#tips').html(Locale["inst.page.message.buy.CHARGE"]);
+					$('#checkDialog').dialog('open');
+				}
+			}
+		}
+	);	
+}
+
+function initLocale() {
+	
+	$("#banner").html(Locale["inst.banner"]);
+	$("#checkDialog").attr("title", Locale["inst.dialog.title.tips"]);
+	$("#okDialog").attr("title", Locale["inst.dialog.title.tips"]);
+	$("#errDialog").attr("title", Locale["inst.dialog.title.tips"]);
+	$("#deleteDialog").attr("title", Locale["inst.dialog.title.delete.model"]);
+	$("#buyDialog").attr("title", Locale["inst.dialog.title.buy.model"]);
+	
+	$("#my_conf_title").html(Locale["inst.page.title.my.conf"]);
+	$("#prompt_conf_title").html(Locale["inst.page.title.prompt.conf"]);
+	
+}
+
+</script>
+
+</head>
+<body id="body">
+
+<!-- check-dialog -->
+
+<div style='display:none;' id="checkDialog" title="" >
+	<p><img src='image/bigimg/alert.png' style='width:60px;vertical-align:top;'/>
+	<label id="tips" style="line-height:40px;vertical-align:bottom;font-size:18px;font-weight:bold;">&nbsp;</label></p>
+</div>
+
+<div style='display:none;' id="okDialog" title="">
+	<p><img src='image/bigimg/ok.png' style='width:60px;vertical-align:top;'/>
+	<label id="ok_tips" style="line-height:40px;vertical-align:bottom;font-size:18px;font-weight:bold;">&nbsp;</label></p>
+</div>
+
+<div style='display:none;' id="errDialog" title="">
+	<p><img src='image/bigimg/close.png' style='width:60px;vertical-align:top;'/>
+	<label id="err_tips" style="line-height:40px;vertical-align:bottom;font-size:18px;font-weight:bold;">&nbsp;</label></p>
+</div>
+
+<div style='display:none;' id="deleteDialog" title="" >
+	<p>
+	<img src='image/bigimg/close.png' style='width:60px;vertical-align:top;'/>
+	<label id="delInfo">&nbsp;</label></p>
+</div>
+
+<div style='display:none;' id="buyDialog" title="">
+	<p>
+		<div style="text-align:left;margin:10px;" id='buyInfos_0'></div>
+		<div style="text-align:left;margin:10px;" id='buyInfos_1'></div>
+		<div style="text-align:left;margin:10px;" id='buyInfos_2'></div>
+		<div style="text-align:left;margin:10px;" id='buyInfos_3'></div>
+		<div style="text-align:left;margin:10px;" id='buyInfos_4'></div>
+		<div style="text-align:left;margin:10px;" id='buyInfos_5'></div>
+	</p>
+</div>
+
+<!-- 
+<div id="tabs">
+<ul><li class="content-header"><span style="vertical-align:bottom;"><img src='image/images/template.png'/>购买云主机：</span></li></ul>
+ -->
+
+<div class='contentBody' style=''>
+	<!--<div style="width:100%; height:40px; background: url(image/new/bg.png)">获取VM</div>-->
+	<div style=" padding:40px 0 0 0;  "> <!--style="background:-webkit-gradient(linear,left top,left 44,from(#ffeba5),to(#ffdb71));  border-bottom:1px solid #ffbe00;"-->
+		<label style="text-align:left;display:block;line-height:24px;background:url(image/new/bg2.png)">
+			<span id="banner" style="position: relative;color:#222;font-size:20px;font-family:'微软雅黑'; padding:5px;background-color:#FFF; font-weight:bold; margin-left:100px;"></span>
+		</label>
+	</div>
+
+	<div style="float:right;margin:5px 20px 0px 20px; "></div>
+
+
+<!-- border:1px orange dashed; -->
+<div style="margin:30px 60px 20px 60px; min-width:779px;">
+<div id="my_conf_title" style=" font-family:'微软雅黑';font-size:20px; padding:10px 0 10px 5px;  color: #000; margin-bottom:20px; border-bottom:1px dotted #999;"></div>
+  <div id='iconContainer' style="position:relative;text-align:left;display:inline-block;">
+</div>
+</div>
+<!-- border:1px orange dashed; -->
+<div style="margin:20px 60px 20px 60px;">
+<div id="prompt_conf_title" style=" font-family:'微软雅黑';font-size:20px; padding:10px 0 10px 5px;  color: #000; margin-bottom:20px; border-bottom:1px dotted #999;"></div>
+<div id='iconContainer2' style="position:relative;text-align:left;display:inline-block;">
+	<!-- <div style='position:absolute;left:440px;top:-10px;'><img style='width:60px;' src='image/bigimg/hot.gif' /></div> -->
+</div></div>
+
+
+
+
+</div>
+
+<!-- 
+</div>
+ -->
+ 
+ 
+</body>
+</html>

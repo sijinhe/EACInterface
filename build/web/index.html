@@ -1,0 +1,49 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Enterprise</title>
+
+<link rel="icon" type="image/ico" href="favicon.ico">
+
+<script src="js/jquery-1.6.4.js" language="javascript"></script>
+<script src="js/jquery.cookie.js" language="javascript"></script>
+
+<script language="javascript">
+$(function(){	
+	var role=getURLParameter("role");
+	
+	if("senior"==role) {
+		setupPaneSenior();
+	}else if("junior"==role){// junior
+		setupPaneJunior();
+	}else{
+		window.location.replace("modules/Login/login.html");
+	}
+});
+
+function setupPaneSenior() {
+	window.location.replace("senior.html");
+}
+
+function setupPaneJunior() {
+	window.location.replace("junior.html");
+}
+
+function getURLParameter(name) {
+    return decodeURI(
+        (RegExp(name + '=' + '(.+?)(&|$)').exec(location.search)||[,null])[1]
+    );
+}
+</script>
+
+</head>
+
+<body>
+	
+<img src="css/images/progress.gif"/>
+Redirecting...
+
+</body>
+</html>

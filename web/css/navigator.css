@@ -1,0 +1,54 @@
+* {
+  font-family:微软雅黑 !important;
+}
+.mainBody{
+	margin:0;
+	padding:0;
+	background:white;
+	white-space:nowrap;
+	overflow:hidden;
+}
+.left{
+	width:245px;
+	float:left;
+	display: inline-block;
+	background:url(image_navigator/sidebar.gif) 0 0 repeat-y;
+	position: absolute;
+	height:100%;
+	left:0;
+	top:0px;
+	overflow:hidden;
+}
+.right {
+  background:white;
+  display:block;
+  position:absolute;
+  top:0;
+  left:245px;
+  min-width:800px;
+  min-height:500px;
+  padding:0;
+  margin:0;
+  z-index:-1;
+  overflow: auto;
+}
+.logo{
+	padding:20px;
+}
+.selected {
+  color:orange !important;
+}
+
+.logout			{ cursor:pointer;display: block; line-height: 16px; padding: 8px 12px 8px 12px; background:url(image_navigator/menu_button_logout.png) top left no-repeat !important;color: black; text-decoration: none; font-weight: bold;  } 
+
+.menu			{ padding-top: 5px; width:196px; padding-left:23px;}
+.menu ul		{ font-size: 13px; padding-left:0px;}
+.menu li		{ list-style-type: none;  Padding-top:5px;}
+.menu li a		{ cursor:pointer;display: block; line-height: 16px; padding: 8px 12px 8px 12px; background:url(image_navigator/menu_button.png) top left no-repeat; color: black; text-decoration: none; font-weight: bold; }
+
+.menu ul ul		{ display:none;font-size: 12px; width: 100%; background: url(image_navigator/bck_white_10.png); margin-top: 4px; padding: 6px 0px 8px 0px; -moz-border-radius: 3px 3px 3px 3px; -webkit-border-radius: 3px 3px 3px 3px; border-radius: 3px 3px 3px 3px; }
+.menu li li		{ padding: 4px 0px 4px 0px; list-style-type:disc; color:#bbb; margin-left:25px;}
+.menu li li a		{ padding: 0 12px 0 0; background:none; font-weight: normal; color: #BBBBBB; }
+.menu li li:hover{color:white;}
+.menu li li a:hover	{ color: #FFFFFF; }
+.menu li li.active a	{ color: #FFFFFF; background:none; }

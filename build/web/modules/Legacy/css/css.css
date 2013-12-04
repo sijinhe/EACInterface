@@ -1,0 +1,338 @@
+* {
+	font-family:"宋体";
+	margin:0;
+	font-size: 12px;
+	font-weight: normal;
+}
+img {
+        border: 0;
+}
+
+a{
+	text-decoration: none;
+	color: #000000;
+}
+ul,li{
+	list-style-image:none;
+	list-style-type:none;
+	text-decoration: none;
+}
+input{
+	border:0;
+	margin: 1px;
+	text-align: left;
+}
+
+body{
+	text-align:center;
+	width:100%;
+	background-image: url(../images/home_bg.jpg);
+	background-repeat: repeat-x;
+	background-color: #FFFFFF;
+}
+.wrap{
+	text-align: center;
+	width: 990px;
+	margin-right: auto;	
+	margin-left: auto;
+}	
+.head{
+	margin-top: 0;
+	width: 990px;
+	margin-bottom: 0;
+	text-align: center;
+}
+.logo{
+	float: left;
+	width: 365px;
+	height: 65px;
+	text-align: left;
+	padding-top: 15px;
+	padding-left: 20px;
+}
+.head_right{
+	float: left;
+	width: 600px;
+}
+.head_info{
+	width: 600px;
+	float: right;
+	height: 50px;
+	padding-top: 10px;
+	text-align: right;
+}
+.username{
+	float: right;
+	height: 20px;
+	width: 136px;
+	background-image: url(../images/home_User.gif);
+	background-repeat: no-repeat;
+	margin-right: 5px;
+	text-align: right;
+}
+.password{
+	float: right;
+	height: 20px;
+	width: 124px;
+	background-image: url(../images/home_password.gif);
+	background-repeat: no-repeat;
+	text-align: right;
+}
+.user_button{
+	float: right;
+	padding-left: 2px;
+}
+.head_menu{
+	float: left;	
+	height: 35px;
+}
+.head_menu ul{
+	background-image: url(../images/home_head_menu_b.gif);
+	background-repeat: repeat-x;
+	width: 543px;
+	height: 35px;
+	padding-top: 10px;
+	float: left;
+}
+.head_menu ul li{
+	width: 85px;
+	display: inline;
+	font-size: 13px;
+	color: #FFFFFF;
+	float: left;
+	height: 15px;
+}
+.head_menu ul li a{
+	font-size: 13px;
+	color: #FFFFFF;
+
+}
+.main{
+	margin-top: 10px;
+	height: auto;
+	text-align: center;
+}
+#cu3er-container {width:985px; outline:0;}
+.error{
+	height: 130px;
+	width: 840px;
+	background-image: url(../images/error.gif);
+	background-repeat: no-repeat;
+	background-position: center;
+	font-weight: bold;
+	color: #FFFFFF;
+	text-align: center;
+	padding-top: 170px;
+	padding-right: 150px;
+}
+.main_title{
+	background-image: url(../images/main_title.jpg);
+	background-repeat: no-repeat;
+	height: 45px;
+	width: 725px;
+	float: left;
+}
+.title_name{
+	float: left;
+	text-align: center;
+	font-size: 13px;
+	font-weight: bold;
+	letter-spacing: 1px;
+	padding-top: 10px;
+	width: 150px;
+}
+.title_linkmap{
+	margin-right: 30px;
+	float: right;
+	padding-top: 10px;
+}
+.main_contect{
+	text-align: left;
+	clear: left;
+}
+.main_contect p{
+	margin-top: 10px;
+	margin-bottom: 10px;
+	margin-left: 15px;
+	text-indent: 26px;
+	font-size: 13px;
+	line-height: 18px;
+}
+.main_contect p strong{
+	font-weight: bold;
+	font-size: 14px;
+}
+.index_left{
+	float: left;
+	width: 250px;
+}
+.index_left_title{
+	height: 25px;
+	width: 250px;
+	background-image: url(../images/home_nav_left.jpg);
+	background-repeat: no-repeat;
+	text-align: left;
+}
+.index_left_title p{
+	text-align: center;
+	padding-top: 10px;
+	font-weight: bold;
+	width: 105px;
+}
+.index_left_nav{
+	border-right-width: 1px;
+	border-bottom-width: 1px;
+	border-left-width: 1px;
+	border-right-style: solid;
+	border-bottom-style: solid;
+	border-left-style: solid;
+	border-right-color: #CCCCCC;
+	height: auto;
+	width: 248px;
+	border-bottom-color: #CCCCCC;
+	border-left-color: #CCCCCC;
+	padding-top: 10px;
+}
+.index_left_nav_clip{
+	background-color: #CCCCCC;
+	height: 22px;
+	width: 248px;
+	text-align: left;
+	margin-bottom: 10px;
+	padding-top: 8px;
+}
+.index_left_nav_clip a{
+	text-decoration: none;
+	font-size: 13px;
+	color: #000000;
+	padding-top: 8px;
+	padding-left: 10px;
+}
+.index_left_nav_clip a:visited{
+	color: #000000;
+}
+.index_left_nav_clip a:hover{
+	color: #000000;
+}
+.index_right{
+	float: left;
+	width: 725px;
+	margin-left: 15px;
+}
+.index_right_top{
+	height: 180px;
+}
+.index_news{
+	float: left;
+	height: 169px;
+	width: 404px;
+	text-align: left;
+}
+.index_news_title{
+	background-image: url(../images/home_news_bg.jpg);
+	background-repeat: no-repeat;
+	height: 20px;
+	width: 391px;
+	text-align: right;
+	padding-right: 15px;
+	padding-top: 5px;
+	font-weight: bold;
+}
+.index_news_content{
+	border-top-width: 1px;
+	border-right-width: 1px;
+	border-bottom-width: 1px;
+	border-left-width: 1px;
+	border-right-style: solid;
+	border-bottom-style: solid;
+	border-left-style: solid;
+	border-top-color: #CCCCCC;
+	border-right-color: #CCCCCC;
+	border-bottom-color: #CCCCCC;
+	border-left-color: #CCCCCC;
+	height: 145px;
+	width: 404px;
+	text-align: left;
+}
+.index_news_content ul{
+	text-align: left;
+	width:404px;
+}
+.index_news_content ul li{
+	text-align: left;
+	display: block;
+	padding-top: 10px;
+	border-bottom-width: 1px;
+	border-bottom-style: dashed;
+	border-top-color: #CCCCCC;
+	border-right-color: #CCCCCC;
+	border-bottom-color: #CCCCCC;
+	border-left-color: #CCCCCC;
+	width: 350px;
+	padding-bottom: 2px;
+}
+.index_news_ad1{
+	background-image: url(../images/home_right_product.jpg);
+	background-repeat: no-repeat;
+	float: left;
+	height: 169px;
+	width: 152px;
+	margin-left: 25px;
+	margin-right: 5px;
+}
+.index_news_ad2{
+	background-image: url(../images/home_right_video.jpg);
+	background-repeat: no-repeat;
+	float: left;
+	height: 169px;
+	width: 137px;
+}
+.index_right_bottom{
+	height: 175px;
+	width: 725px;
+	clear: left;
+	float: none;
+	margin-top: 10px;
+}
+.index_product_title{
+	background-image: url(../images/home_product.jpg);
+	background-repeat: no-repeat;
+	height: 25px;
+	width: 726px;
+}
+.index_product_content{
+	margin-right: auto;	
+	margin-left: auto;
+	height: 150px;
+	width: 724px;
+	border-top-width: 1px;
+	border-right-width: 1px;
+	border-bottom-width: 1px;
+	border-left-width: 1px;
+	border-top-style: none;
+	border-right-style: solid;
+	border-bottom-style: solid;
+	border-left-style: solid;
+	border-top-color: #CCCCCC;
+	border-right-color: #CCCCCC;
+	border-bottom-color: #CCCCCC;
+	border-left-color: #CCCCCC;
+}
+.index_product{
+	float: left;
+	margin-right: 10px;
+	margin-left: 10px;
+}
+.foot{
+	
+}
+.client{
+text-align:left;
+
+}
+.foot_info{
+  background:#f0f0f0;
+	border-top-width: 1px;
+	border-top-style: solid;
+	border-top-color: #CCCCCC;
+}

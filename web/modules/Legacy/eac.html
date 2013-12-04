@@ -1,0 +1,332 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html dir="ltr" xml:lang="en-gb" xmlns="http://www.w3.org/1999/xhtml" lang="en-gb">
+    <head>
+
+
+        <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+        <title></title>
+
+        <link type="text/css" href="css/smoothness/jquery-ui-1.8.8.custom.css" rel="stylesheet" />
+
+
+        <link rel="stylesheet" href="image/template.css" type="text/css"/>
+        <link rel="stylesheet" href="image/constant.css" type="text/css"/>
+        <link rel="stylesheet" href="image/imagegallery.css" type="text/css"/>
+        <link rel="stylesheet" href="image/content.css" type="text/css"/>
+        <link rel="stylesheet" href="image/jquery.cluetip.css" type="text/css"/>
+        <link rel="stylesheet" href="image/custom.css" type="text/css"/>
+
+        <script type="text/javascript" src="js/jquery.js"></script>
+        <script type="text/javascript" src="js/jquery-ui-1.8.8.custom.min.js"></script>
+        <script type="text/javascript" src="../../locale.jsp"></script>
+        <script type="text/javascript" src="js/check.js"></script>
+        <script type="text/javascript" src="js/jquery.blockUI.js"></script>
+        <script src="../../js/String.js" language="javascript"></script>
+        <script type="text/javascript" src="../../js/base64.js"></script>
+        <script type="text/javascript" src="../../js/server.js"></script>
+        <script type="text/javascript" src="../../js/jquery.cookie.js"></script>
+        <script type="text/javascript" src="../../js/account.js"></script>
+        <script type="text/javascript" src="../../js/server.js"></script>
+        <script type="text/javascript" src="js/xml.parser.js"></script>
+        <script type="text/javascript" src="js/util.js"></script>
+        <script type="text/javascript" src="js/jquery.watermarkinput.js"></script>
+        <script type="text/javascript" src="js/jquery.cluetip.js"></script>
+
+        <!--<script type="text/javascript" src="image/jquery.jNice.js"></script>-->
+
+        <!--<link href="image/base.css" rel="stylesheet" type="text/css" />-->
+        <!--<link href="image/jNice.css" rel="stylesheet" type="text/css" />-->
+
+        <script language="javascript">
+            $(document).ajaxStart($.blockUI).ajaxStop($.unblockUI);
+
+            <!-- 处理参数 -->
+            var g_price='0';
+
+            <!-- ajax的处理 -->
+            $(document).ready(
+            function(){
+                initLocale();
+
+                if(getUsername()=='') {
+                    // 尚未登录
+                }
+            }
+        );
+
+
+
+
+            $(function(){
+                // Button
+                // 初始化Button
+                $("#submitBtn").button();
+
+                // Dialog
+                $('#infoDialog').dialog({
+                    autoOpen: false,
+                    width: 400,
+                    resizable: false,
+                    modal: true,
+                    buttons: [{
+                            text: Locale["eac.dialog.button.close"],
+                            click: function() {
+                                $(this).dialog("close");
+                            }
+                        }]
+                });
+                $('#confirmDialog').dialog({
+                    autoOpen: false,
+                    width: 400,
+                    resizable: false,
+                    modal: true,
+                    buttons: [
+                        {
+                            text: Locale["eac.dialog.button.confirm"],
+                            click: function() {
+                                var app= $("#enableapp").attr("checked")?"true":"false";
+                                var db= $("#enabledb").attr("checked")?"true":"false";
+
+
+                                
+                                $.post("/EACCloudControl/CreateEAC",
+                                {
+							
+                                    login: getUsername(),
+                                    enableAPP: app,
+                                    enableDB: db,
+                                    maxConnection: $('#select_1').val(),
+                                    instance: $('#select_2').val(),
+                                    containerName: $('#eacName').val()
+                                },
+                                function(data) {
+
+                                    var obj = jQuery.parseJSON(data);
+                                    
+                                    var tips='';
+
+                                    if(obj.result){
+                                        tips=Locale["eac.page.message.done"];
+                                        $('#ok_tips').html(tips);
+                                        $('#okDialog').dialog("open");
+                                    } else {
+                                        tips=obj.comment;
+                                        $('#err_tips').html(tips);
+                                        $('#errDialog').dialog("open");
+                                    }
+                                }
+                            );
+
+
+                                $('#select_1_dopt').attr('selected', 'selected');
+                                $('#select_2_dopt').attr('selected', 'selected');
+                                $('#eacName').val('');
+                                $(this).dialog("close");
+
+                            }
+                        },
+                        {
+                            text: Locale["eac.dialog.button.cancel"],
+                            click: function() {
+                                $(this).dialog("close");
+                            }
+                        }
+                    ]
+                });
+
+                $('#okDialog').dialog({
+                    autoOpen: false,
+                    width: 400,
+                    modal: true,
+                    draggable: false,
+                    position: ['center',200],
+                    resizable: false,
+                    buttons: [{
+                            text: Locale["eac.dialog.button.close"],
+                            click: function() {
+                                $(this).dialog("close");
+                            }
+                        }]
+                });
+
+                $('#errDialog').dialog({
+                    autoOpen: false,
+                    width: 400,
+                    modal: true,
+                    draggable: false,
+                    position: ['center',200],
+                    resizable: false,
+                    buttons: [{
+                            text: Locale["eac.dialog.button.close"],
+                            click: function() {
+                                $(this).dialog("close");
+                            }
+                        }]
+                });
+
+                // Dialog Link
+                // 提交
+                $('#submitBtn').click(function(){
+                    $.Watermark.HideAll();
+
+                    var tips="";
+                    var isok=true;
+                
+                    if($.checkstr($('#eacName').val(), 'vmname')==false) {
+                        tips=Locale["eac.page.message.illegal.eacname"];
+                        isok=false;
+                    }else if($('#eacName').val().length>10) {
+                        tips=Locale["eac.page.message.eacname.too.long"];
+                        isok=false;
+                    }
+
+
+                    if(!isok) {
+                        $('#tips').html(tips);
+                        $('#infoDialog').dialog('open');
+                    }else {
+                        $('#confirm').html(Locale["eac.page.confirm.buy.eac"]); //(0.05*parseFloat($('#select_2').val())).toFixed(2)
+                        $('#infoDialog').dialog('close');
+                        $('#confirmDialog').dialog('open');
+                    }
+
+                    $.Watermark.ShowAll();
+                    return false;
+                });
+
+
+                // 初始化input的watermark
+                $('#eacName').Watermark(Locale["eac.page.eac.type.in.name"], '#7e7e7e');
+
+            });
+
+            function initLocale() {
+
+                $("#banner").html(Locale["eac.banner"]);
+
+                $("#infoDialog").attr("title", Locale["eac.dialog.title.tips"]);
+                $("#confirmDialog").attr("title", Locale["eac.dialog.title.confirm"]);
+                $("#okDialog").attr("title", Locale["eac.dialog.title.tips"]);
+                $("#errDialog").attr("title", Locale["eac.dialog.title.tips"]);
+
+                $("#page_title").html(Locale["eac.page.title"]);
+                $("#page_notice_title").html(Locale["eac.page.notice.title"]);
+                $("#page_notice_content").html(Locale["eac.page.notice.content"]);
+
+                $("#select_1_dopt").html(Locale["eac.page.message.choose.connection"]);
+                $("#select_2_dopt").html(Locale["eac.page.message.choose.instance"]);
+
+                $("#submitBtn").html(Locale["eac.page.button.buy"]);
+
+                $("#eac_price_title").html(Locale["eac.page.price.title"]);
+                $("#eacName").html(Locale["eac.page.eac.type.in.name"]);
+
+            }
+
+        </script>
+
+    </head>
+
+    <body id="body">
+
+        <!-- check-dialog -->
+
+        <div style='display:none;' id="infoDialog" title="">
+            <p><img src='image/bigimg/alert.png' style='vertical-align:top;'/>
+                <label id="tips" style="line-height:40px;vertical-align:bottom;font-size:12px; font-weight:bold;">&nbsp;</label></p>
+        </div>
+
+        <div style='display:none;' id="confirmDialog" title="">
+            <p><img src='image/bigimg/alert.png' style='vertical-align:top;'/>
+                <label id="confirm" style="line-height:40px;vertical-align:bottom;font-size:12px;font-weight:bold;">&nbsp;</label></p>
+        </div>
+
+        <div style='display:none;' id="okDialog" title="">
+            <p><img src='image/bigimg/ok.png' style='vertical-align:top;'/>
+                <label id="ok_tips" style="line-height:40px;vertical-align:bottom;font-size:12px;font-weight:bold;">&nbsp;</label></p>
+        </div>
+
+        <div style='display:none;' id="errDialog" title="">
+            <p><img src='image/bigimg/close.png' style='vertical-align:top;'/>
+                <label id="err_tips" style="line-height:40px;vertical-align:bottom;font-size:12px;font-weight:bold;">&nbsp;</label></p>
+        </div>
+
+
+        <!-- 标题 -->
+        <!-- <div id="tabs"><ul><li class="content-header"><img src='image/images/volume.png'/>购买扩展磁盘：</li></ul> -->
+        <div class="contentBody">
+            <!--<label style="text-align:left;font-weight:bold;font-size:16px;display:block;line-height:24px;padding:10px 0 10px 20px;">
+    购买云存储空间：
+	</label>-->
+            <!--<div style="width:100%; height:130px; background: url(image/new/bg.png)"></div>-->
+
+            <div style=" padding:40px 0 0 0;  "> <!--style="background:-webkit-gradient(linear,left top,left 44,from(#ffeba5),to(#ffdb71));  border-bottom:1px solid #ffbe00;"-->
+                <label style="text-align:left;display:block;line-height:24px;background:url(image/new/bg2.png)">
+                    <span id="banner" style="position: relative;color:#222;font-size:20px;font-family:'微软雅黑';padding:5px; background-color:#fff; font-weight:bold; margin-left:100px;"></span>
+                </label>
+            </div>
+            <div style="margin:30px 60px 0 60px; min-width:779px;">
+                <div id="page_title" style=" font-family:'微软雅黑';font-size:20px; padding:10px 0 10px 5px;  color: #000; margin-bottom:30px; border-bottom:1px dotted #999;"></div>
+
+                <div style="float:left; display:inline; width:450px;;border: 1px #c6c6c6 solid; -moz-border-radius: 1em;-webkit-border-radius: 1em;border-radius: 1em; padding:15px; margin-right:60px;">
+
+                    <label style="text-align:left;font-weight:bold;font-size:12px;display:block;line-height:24px;padding:5px 0 0 20px;">
+                        <img src="image/new/info.png" class="small-icon" style="padding-right:10px;"  />
+                        <span id="page_notice_title"></span>
+                    </label>
+
+                    <label id="page_notice_content" style="text-align:left;color:#222;font-size:12px;display:block;line-height:24px;padding:5px 0px 10px 20px;white-space:normal;">
+                        <!-- Notice Content -->
+                    </label>
+                </div>
+
+                <div style='text-align:left;vertical-align:middle; float:left; display:inline; padding-top:40px;'>
+                    <img class="middle-icon" src="image/images/to_go.png" />
+                    <label id='pricetips' style='line-height:28px;font-weight:bold;'>
+                        <span id="eac_price_title"></span>
+                        <label id='pricetips' style='color:red;line-height:28px;'></label>
+                    </label>
+                    <div>
+                        <div style=" display: inline; margin-right:20px;">
+<!--                            <div style="margin-top:10px;">
+                                <label for="enableapp">Enable Web Application</label> <input type="checkbox" id="enableapp" name="app"  />
+                                <select id='select_2' style="width:160px;margin:0;vertical-align:baseline;">
+                                    <option id='select_2_dopt' disabled="disabled" selected="selected"></option>
+                                    <option value="1">1 Instance</option>
+                                    <option value="2">2 Instances</option>
+                                </select>
+                            </div>
+                            <div style="margin-top:10px;">
+                                <label for="enabledb">Enable Database</label> <input type="checkbox" id="enabledb" name="db"  />
+                                <select id='select_1' style="width:160px;margin:0;vertical-align:baseline;">
+                                    <option id='select_1_dopt' disabled="disabled" selected="selected"></option>
+                                    <option value="5">5 Connections</option>
+                                    <option value="10">10 Connections</option>
+                                    <option value="15">15 Connections</option>
+                                    <option value="20">20 Connections</option>
+                                    <option value="25">25 Connections</option>
+                                    <option value="30">30 Connections</option>
+                                    <option value="35">35 Connections</option>
+                                    <option value="40">40 Connections</option>
+                                </select>
+                            </div>-->
+                            <div style="margin-top:10px;">
+                                <input id="eacName" title="" style="width:160px;margin-left:10px;margin-right:10px;" />
+                                <!-- margin-bottom:12px; -->
+                                <a href='#' id="submitBtn"></a>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+        </div>
+
+
+        <br/>
+
+
+    </body>
+</html>

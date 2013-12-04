@@ -1,0 +1,68 @@
+@charset "utf-8";
+/* CSS Document 
+	Author: Bill, 2011*/
+
+/**
+ * Common
+ */
+
+body {margin:0;background:#656565;}
+
+#container {
+	margin:auto;
+	width:817px;
+	height:518px;
+	background:url(image/theme_enterprise/loginBg.png) no-repeat;
+	position:relative;
+}
+
+.loginBox {	position:absolute;left:180px;top:200px;}
+
+.ctrlPanel {position:absolute;top:180px;white-space:nowrap;}
+.ctrlPanel > .a1 {position:absolute;left:0px;top:6px;}
+.ctrlPanel > .a2 {position:absolute;left:200px;top:6px;}
+.ctrlPanel > .a3 {position:absolute;left:80px;top:6px; margin-top:4px;color:#eee;  text-decoration:none; font-size:14px; font-weight:bold;}
+.ctrlPanel > .a3:hover{color:#f90; }
+
+
+.usernameInfo{
+	color:#cecece;
+	font-family:'微软雅黑';
+	font-weight:bold;
+	margin-bottom:10px;
+}
+
+.passwordInfo{
+	color:#cecece;
+	font-family:'微软雅黑';
+	font-weight:bold;
+	margin:20px 0 10px 0;
+}
+
+.inputLine > input { background:#fff; height:15px; width:450px; font-size:16px;padding:10px; 
+	background: 
+		-webkit-gradient(
+			linear,
+			left top,
+			left 35,
+			from(#ffffff),
+			color-stop(10%, #ece8d6),
+			to(#ffffff)
+		);
+	background: 
+		-moz-linear-gradient(
+			top,
+			#FFFFFF,
+			#EEEEEE 1px,
+			#FFFFFF 25px
+			);
+	-moz-box-shadow: 0px 0px 8px #dddddd;
+	-webkit-box-shadow: 0px 0px 8px #dddddd;
+	box-shadow: 0px 0px 8px #dddddd;}
+.inputLine > input:focus{background:#ffffff;}
+.inputLine.line_1 { top:0px;}
+.inputLine.line_2 { top:32px;}
+
+.outline {position:absolute;right:40px;top:60px;font-size:12px;text-align:right;cursor:default;}
+.outline > a{color:#fff; text-decoration:none;}
+.outline > a:hover{ text-decoration:underline;}
